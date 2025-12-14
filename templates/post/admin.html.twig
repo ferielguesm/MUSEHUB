@@ -2,47 +2,237 @@
 
 {% block title %}Administration des posts{% endblock %}
 
-{% block body %}
-<h1>Administration des posts</h1>
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .moderation-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-flagged { background: #fef3c7; color: #92400e; }
+    .status-hidden { background: #fee2e2; color: #991b1b; }
+    .status-pending { background: #e0e7ff; color: #3730a3; }
+    .post-content-preview {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .moderation-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .moderation-actions .btn {
+        font-size: 0.875rem;
+        padding: 4px 8px;
+    }
+</style>
+{% endblock %}
 
-<table border="1" cellpadding="8" cellspacing="0">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Auteur</th>
-            <th>Contenu</th>
-            <th>Date de création</th>
-            <th>Likes</th>
-            <th>Dislikes</th>
-            <th>Nombre de commentaires</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for post in posts %}
-            <tr>
-                <td>{{ post.id }}</td>
-                <td>{{ post.authorUuid }}</td>
-                <td>
-                    {% if post.content|length > 80 %}
-                        {{ post.content|slice(0, 80) ~ '...' }}
-                    {% else %}
-                        {{ post.content }}
-                    {% endif %}
-                </td>
-                <td>{{ post.createdAt ? post.createdAt|date('d/m/Y H:i') : '' }}</td>
-                <td>{{ post.likesCount }}</td>
-                <td>{{ post.dislikesCount }}</td>
-                <td>{{ post.comments|length }}</td>
-                <td>
-                    <a href="{{ path('post_show', {id: post.id}) }}">Voir côté utilisateur</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">Aucun post trouvé.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block body %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Administration des posts</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ path('admin_post_index', {'status': currentStatus, 'sort': 'recent'}) }}" class="btn btn-outline-secondary {{ currentSort == 'recent' ? 'active' : '' }}">Récents</a>
+            <a href="{{ path('admin_post_index', {'status': currentStatus, 'sort': 'liked'}) }}" class="btn btn-outline-primary {{ currentSort == 'liked' ? 'active' : '' }}">Aimés</a>
+            <a href="{{ path('admin_post_index', {'status': currentStatus, 'sort': 'commented'}) }}" class="btn btn-outline-info {{ currentSort == 'commented' ? 'active' : '' }}">Commentés</a>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mb-4">
+        <div class="btn-group" role="group">
+            <a href="{{ path('admin_post_index', {'status': 'all', 'sort': currentSort}) }}" class="btn btn-outline-secondary {{ currentStatus == 'all' ? 'active' : '' }}">Tous</a>
+            <a href="{{ path('admin_post_index', {'status': 'approved', 'sort': currentSort}) }}" class="btn btn-outline-success {{ currentStatus == 'approved' ? 'active' : '' }}">Approuvés</a>
+            <a href="{{ path('admin_post_index', {'status': 'flagged', 'sort': currentSort}) }}" class="btn btn-outline-warning {{ currentStatus == 'flagged' ? 'active' : '' }}">Signalés</a>
+            <a href="{{ path('admin_post_index', {'status': 'hidden', 'sort': currentSort}) }}" class="btn btn-outline-danger {{ currentStatus == 'hidden' ? 'active' : '' }}">Masqués</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Auteur</th>
+                            <th>Catégorie</th>
+                            <th>Contenu</th>
+                            <th>Statut</th>
+                            <th>Stats</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                            <tr>
+                                <td>{{ post.id }}</td>
+                                <td>
+                                    <code class="small">{{ post.authorUuid|slice(0, 8) }}...</code>
+                                </td>
+                                <td>
+                                    {% if post.category %}
+                                        <span class="badge" style="background-color: {{ post.category.color }}; color: white;">
+                                            <i class="{{ post.category.icon }}"></i> {{ post.category.name }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">Aucune</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="post-content-preview" title="{{ post.content }}">
+                                        {{ post.content|slice(0, 80) ~ (post.content|length > 80 ? '...' : '') }}
+                                    </div>
+                                    {% if post.imageUrl %}
+                                        <small class="text-muted"><i class="fas fa-image"></i> Avec image</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="moderation-status status-{{ post.moderationStatus ?: 'pending' }}">
+                                        {% if post.moderationStatus == 'approved' %}Approuvé
+                                        {% elseif post.moderationStatus == 'flagged' %}Signalé
+                                        {% elseif post.moderationStatus == 'hidden' %}Masqué
+                                        {% else %}En attente{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>
+                                        <i class="fas fa-thumbs-up text-success"></i> {{ post.likesCount }}
+                                        <i class="fas fa-thumbs-down text-danger ms-2"></i> {{ post.dislikesCount }}
+                                        <i class="fas fa-comments text-primary ms-2"></i> {{ post.comments|length }}
+                                    </small>
+                                </td>
+                                <td>{{ post.createdAt ? post.createdAt|date('d/m/Y H:i') : '' }}</td>
+                                <td>
+                                    <div class="moderation-actions">
+                                        <a href="{{ path('admin_post_comments', {id: post.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-comments"></i> Commentaires
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-info" onclick="viewPost({{ post.id }})">
+                                            <i class="fas fa-eye"></i> Voir
+                                        </button>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                Modérer
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <form action="{{ path('admin_post_moderate', {id: post.id}) }}" method="POST" class="d-inline">
+                                                        <input type="hidden" name="action" value="approve">
+                                                        <button type="submit" class="dropdown-item text-success">
+                                                            <i class="fas fa-check"></i> Approuver
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ path('admin_post_moderate', {id: post.id}) }}" method="POST" class="d-inline">
+                                                        <input type="hidden" name="action" value="flag">
+                                                        <input type="hidden" name="reason" value="Contenu inapproprié">
+                                                        <button type="submit" class="dropdown-item text-warning">
+                                                            <i class="fas fa-flag"></i> Signaler
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ path('admin_post_moderate', {id: post.id}) }}" method="POST" class="d-inline">
+                                                        <input type="hidden" name="action" value="hide">
+                                                        <input type="hidden" name="reason" value="Masquage temporaire">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="fas fa-eye-slash"></i> Masquer
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-danger" onclick="confirmDelete({{ post.id }})">
+                                                        <i class="fas fa-trash"></i> Supprimer
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">Aucun post trouvé.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if totalPages > 1 %}
+                <nav aria-label="Posts pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if currentPage > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_post_index', {'status': currentStatus, 'sort': currentSort, 'page': currentPage - 1}) }}">Précédent</a>
+                            </li>
+                        {% endif %}
+
+                        {% for page in (currentPage - 2)..(currentPage + 2) %}
+                            {% if page >= 1 and page <= totalPages %}
+                                <li class="page-item {{ page == currentPage ? 'active' : '' }}">
+                                    <a class="page-link" href="{{ path('admin_post_index', {'status': currentStatus, 'sort': currentSort, 'page': page}) }}">{{ page }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if currentPage < totalPages %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_post_index', {'status': currentStatus, 'sort': currentSort, 'page': currentPage + 1}) }}">Suivant</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer définitivement ce post ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteForm" action="" method="POST" class="d-inline">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(postId) {
+    const form = document.getElementById('deleteForm');
+    form.action = '{{ path("admin_post_moderate", {id: "__POST_ID__"}) }}'.replace("__POST_ID__", postId);
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function viewPost(postId) {
+    window.open('{{ path("community") }}#post-' + postId, '_blank');
+}
+</script>
 {% endblock %}

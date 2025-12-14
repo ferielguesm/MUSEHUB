@@ -1,0 +1,181 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Commentaires du post #{{ post.id }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Commentaires du post #{{ post.id }}</h1>
+            <p class="text-muted mb-0">Gestion des commentaires</p>
+        </div>
+        <a href="{{ path('admin_post_index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux posts
+        </a>
+    </div>
+
+    <!-- Post Preview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Aperçu du post</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-2"><strong>Contenu:</strong> {{ post.content }}</p>
+                    <p class="mb-2"><strong>Auteur:</strong> <code>{{ post.authorUuid }}</code></p>
+                    <p class="mb-0"><strong>Date:</strong> {{ post.createdAt|date('d/m/Y H:i') }}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-end">
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-thumbs-up"></i> {{ post.likesCount }}
+                        </span>
+                        <span class="badge bg-danger me-2">
+                            <i class="fas fa-thumbs-down"></i> {{ post.dislikesCount }}
+                        </span>
+                        <span class="badge bg-primary">
+                            <i class="fas fa-comments"></i> {{ post.comments|length }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Commentaires ({{ post.comments|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if post.comments|length > 0 %}
+                <div class="comments-list">
+                    {% for comment in post.comments %}
+                        <div class="comment-item border-bottom pb-3 mb-3" id="comment-{{ comment.id }}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <strong class="me-3">{{ comment.commenterUuid starts with 'guest_' ? 'Invité' : 'Utilisateur' }}</strong>
+                                        <code class="small text-muted">{{ comment.commenterUuid|slice(0, 8) }}...</code>
+                                        <small class="text-muted ms-3">{{ comment.createdAt|date('d/m/Y H:i') }}</small>
+                                    </div>
+                                    <p class="mb-2">{{ comment.content }}</p>
+                                    {% if comment.parentComment %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-reply"></i> Réponse au commentaire #{{ comment.parentComment.id }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                <div class="ms-3">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <button type="button" class="dropdown-item text-success" onclick="moderateComment({{ comment.id }}, 'approve')">
+                                                    <i class="fas fa-check"></i> Approuver
+                                                </button>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <button type="button" class="dropdown-item text-danger" onclick="confirmDeleteComment({{ comment.id }})">
+                                                    <i class="fas fa-trash"></i> Supprimer
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if comment.replies|length > 0 %}
+                                <div class="replies ms-4 mt-3 border-start ps-3">
+                                    <small class="text-muted mb-2 d-block">Réponses:</small>
+                                    {% for reply in comment.replies %}
+                                        <div class="reply-item mb-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <strong class="me-2 small">{{ reply.commenterUuid starts with 'guest_' ? 'Invité' : 'Utilisateur' }}</strong>
+                                                        <code class="small text-muted">{{ reply.commenterUuid|slice(0, 8) }}...</code>
+                                                        <small class="text-muted ms-2">{{ reply.createdAt|date('d/m/Y H:i') }}</small>
+                                                    </div>
+                                                    <p class="small mb-1">{{ reply.content }}</p>
+                                                </div>
+                                                <div class="ms-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger btn-xs" onclick="confirmDeleteComment({{ reply.id }})">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comments fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">Aucun commentaire pour ce post.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Comment Modal -->
+<div class="modal fade" id="deleteCommentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer ce commentaire ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteCommentForm" action="" method="POST" class="d-inline">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function moderateComment(commentId, action) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ path("admin_comment_moderate", {id: "__COMMENT_ID__"}) }}'.replace("__COMMENT_ID__", commentId);
+
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+
+    form.appendChild(actionInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function confirmDeleteComment(commentId) {
+    const form = document.getElementById('deleteCommentForm');
+    form.action = '{{ path("admin_comment_moderate", {id: "__COMMENT_ID__"}) }}'.replace("__COMMENT_ID__", commentId);
+    const modal = new bootstrap.Modal(document.getElementById('deleteCommentModal'));
+    modal.show();
+}
+</script>
+
+<style>
+.btn-xs {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+</style>
+{% endblock %}

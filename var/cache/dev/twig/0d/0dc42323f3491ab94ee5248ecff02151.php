@@ -502,6 +502,6 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
     </script>
 {% endblock %}
 
-", "front/events.html.twig", "C:\\xampp\\htdocs\\MuseHub-my-work\\MuseHub-my-work\\templates\\front\\events.html.twig");
+", "front/events.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\front\\events.html.twig");
     }
 }

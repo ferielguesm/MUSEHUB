@@ -819,6 +819,6 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
 </html>
 
 
-", "admin/base.html.twig", "C:\\xampp\\htdocs\\MuseHub-my-work\\MuseHub-my-work\\templates\\admin\\base.html.twig");
+", "admin/base.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\admin\\base.html.twig");
     }
 }

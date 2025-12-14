@@ -85,6 +85,6 @@ class __TwigTemplate_ab71baf7fe87bd793f478f660ae592a0 extends Template
     <path d=\"M4 6v6a8 3 0 0 0 16 0v-6\"></path>
     <path d=\"M4 12v6a8 3 0 0 0 16 0v-6\"></path>
 </svg>
-", "@Doctrine/Collector/database.svg", "C:\\xampp\\htdocs\\MuseHub-my-work\\MuseHub-my-work\\vendor\\doctrine\\doctrine-bundle\\templates\\Collector\\database.svg");
+", "@Doctrine/Collector/database.svg", "C:\\xampp\\htdocs\\musehub2\\vendor\\doctrine\\doctrine-bundle\\templates\\Collector\\database.svg");
     }
 }

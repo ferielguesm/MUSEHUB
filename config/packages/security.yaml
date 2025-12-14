@@ -49,6 +49,7 @@ security:
         - { path: ^/api/auth/forgot-password, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/reset-password, roles: PUBLIC_ACCESS }
         - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
+        - { path: ^/api/chatbot, roles: PUBLIC_ACCESS }
         - { path: ^/api/artworks, roles: PUBLIC_ACCESS }
         - { path: ^/api/events, roles: PUBLIC_ACCESS }
         - { path: ^/api/marketplace, roles: PUBLIC_ACCESS }

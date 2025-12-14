@@ -21,8 +21,8 @@ class HarvardArtService
                 'apikey' => $this->apiKey,
                 'page' => $page,
                 'size' => $limit,
-                'hasimage' => 1,
-                'sort' => 'rank',
+                'hasimage' => 1, // Only get artworks with images
+                'sort' => 'rank', // Use rank for consistent quality results
                 'sortorder' => 'desc',
             ]
         ]);

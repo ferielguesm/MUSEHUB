@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Artwork;
 use App\Entity\Listing;
+use App\Entity\Offre;
 use App\Entity\Post;
 use App\Entity\Comment;
 use App\Entity\Participant;
@@ -11,6 +12,7 @@ use App\Repository\ArtworkRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\EventRepository;
 use App\Repository\ListingRepository;
+use App\Repository\OffreRepository;
 use App\Repository\ParticipantRepository;
 use App\Repository\PostRepository;
 use App\Repository\CommentRepository;
@@ -30,6 +32,7 @@ class WebFormController extends AbstractController
         private ArtworkRepository $artworkRepository,
         private CategoryRepository $categoryRepository,
         private ListingRepository $listingRepository,
+        private OffreRepository $offreRepository,
         private EventRepository $eventRepository,
         private ParticipantRepository $participantRepository,
         private ContentFilter $contentFilter
@@ -248,7 +251,7 @@ class WebFormController extends AbstractController
 
     #[Route('/posts/create', name: 'web_posts_create', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function createPost(Request $request): Response
+    public function createPost(Request $request, \App\Repository\PostCategoryRepository $categoryRepository): Response
     {
         $user = $this->getUser();
         $content = $request->request->get('content');
@@ -260,14 +263,30 @@ class WebFormController extends AbstractController
 
         // Filter content
         $filterResult = $this->contentFilter->filterContent($content);
-        if (!$filterResult['isValid']) {
-            $this->addFlash('error', 'Le contenu n\'est pas valide: ' . implode(', ', $filterResult['issues']));
+
+        // Block content with high severity score
+        if ($filterResult['isBlocked']) {
+            $this->addFlash('error', 'Votre publication a été bloquée en raison de contenu inapproprié. Score de gravité: ' . $filterResult['severityScore']);
             return $this->redirectToRoute('community');
+        }
+
+        // Warn about moderate issues
+        if (!$filterResult['isValid']) {
+            $this->addFlash('warning', 'Votre contenu a été filtré: ' . implode(', ', $filterResult['issues']));
         }
 
         $post = new Post();
         $post->setAuthorUuid($user->getUuid());
         $post->setContent($filterResult['filteredContent']);
+
+        // Handle category
+        $categoryId = $request->request->get('category_id');
+        if ($categoryId) {
+            $category = $categoryRepository->find($categoryId);
+            if ($category) {
+                $post->setCategory($category);
+            }
+        }
 
         $imageUrl = null;
         $uploadedImage = $request->files->get('image_file');
@@ -446,9 +465,16 @@ class WebFormController extends AbstractController
         }
 
         $filterResult = $this->contentFilter->filterContent($content);
-        if (!$filterResult['isValid']) {
-            $this->addFlash('error', 'Votre commentaire a été bloqué: ' . implode(', ', $filterResult['issues']));
+
+        // Block comments with high severity score
+        if ($filterResult['isBlocked']) {
+            $this->addFlash('error', 'Votre commentaire a été bloqué en raison de contenu inapproprié. Score de gravité: ' . $filterResult['severityScore']);
             return $this->redirectToRoute('community', ['_fragment' => 'post-' . $post->getId()]);
+        }
+
+        // Warn about moderate issues
+        if (!$filterResult['isValid']) {
+            $this->addFlash('warning', 'Votre commentaire a été filtré: ' . implode(', ', $filterResult['issues']));
         }
 
         $comment = new Comment();
@@ -510,9 +536,16 @@ class WebFormController extends AbstractController
         }
 
         $filterResult = $this->contentFilter->filterContent($content);
-        if (!$filterResult['isValid']) {
-            $this->addFlash('error', 'Votre commentaire a été bloqué: ' . implode(', ', $filterResult['issues']));
+
+        // Block comments with high severity score
+        if ($filterResult['isBlocked']) {
+            $this->addFlash('error', 'Votre commentaire a été bloqué en raison de contenu inapproprié. Score de gravité: ' . $filterResult['severityScore']);
             return $this->redirectToRoute('community', ['_fragment' => 'post-' . $post->getId()]);
+        }
+
+        // Warn about moderate issues
+        if (!$filterResult['isValid']) {
+            $this->addFlash('warning', 'Votre commentaire a été filtré: ' . implode(', ', $filterResult['issues']));
         }
 
         $comment->setContent($filterResult['filteredContent']);
@@ -554,5 +587,63 @@ class WebFormController extends AbstractController
 
         $this->addFlash('success', 'Commentaire supprimé.');
         return $this->redirectToRoute('community', ['_fragment' => 'post-' . $post->getId()]);
+    }
+
+    #[Route('/marketplace/offre/create', name: 'web_marketplace_offre_create', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function createOffre(Request $request): Response
+    {
+        $listingId = $request->request->get('listing_id');
+        $prixPropose = $request->request->get('prix_propose');
+        $commentaire = $request->request->get('commentaire');
+
+        if (!$listingId || !$prixPropose) {
+            $this->addFlash('error', 'L\'annonce et le prix proposé sont requis');
+            return $this->redirectToRoute('marketplace');
+        }
+
+        $listing = $this->listingRepository->find($listingId);
+        if (!$listing) {
+            $this->addFlash('error', 'Annonce introuvable');
+            return $this->redirectToRoute('marketplace');
+        }
+
+        if ($listing->getStatus() !== 'available') {
+            $this->addFlash('error', 'Cette annonce n\'est plus disponible');
+            return $this->redirectToRoute('marketplace');
+        }
+
+        $user = $this->getUser();
+
+        // Check if user already made an offer for this listing
+        $existingOffre = $this->offreRepository->findOneBy([
+            'listing' => $listing,
+            'utilisateur' => $user
+        ]);
+
+        if ($existingOffre) {
+            $this->addFlash('error', 'Vous avez déjà fait une offre pour cette annonce');
+            return $this->redirectToRoute('marketplace');
+        }
+
+        // Validate price
+        $prixProposeFloat = (float)$prixPropose;
+        if ($prixProposeFloat <= 0) {
+            $this->addFlash('error', 'Le prix proposé doit être positif');
+            return $this->redirectToRoute('marketplace');
+        }
+
+        $offre = new Offre();
+        $offre->setListing($listing);
+        $offre->setUtilisateur($user);
+        $offre->setPrixPropose($prixProposeFloat);
+        $offre->setCommentaire($commentaire ?: null);
+        $offre->setStatut('En attente');
+
+        $this->em->persist($offre);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Votre offre a été envoyée avec succès !');
+        return $this->redirectToRoute('marketplace');
     }
 }

@@ -774,6 +774,6 @@ class __TwigTemplate_996b3bab3dd918295a78cfb2de9d46a6 extends Template
     </div>
 </div>
 {% endblock %}
-", "front/artworks.html.twig", "C:\\xampp\\htdocs\\MuseHub-my-work\\MuseHub-my-work\\templates\\front\\artworks.html.twig");
+", "front/artworks.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\front\\artworks.html.twig");
     }
 }

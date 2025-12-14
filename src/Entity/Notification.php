@@ -32,6 +32,12 @@ class Notification
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $commentId = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $message = null;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $metadata = null;
+
     #[ORM\Column(type: 'boolean')]
     private bool $isRead = false;
 
@@ -41,6 +47,7 @@ class Notification
     public const TYPE_POST_REACTION = 'post_reaction';
     public const TYPE_POST_COMMENT = 'post_comment';
     public const TYPE_COMMENT_REPLY = 'comment_reply';
+    public const TYPE_MODERATOR_ESCALATION = 'moderator_escalation';
 
     public function __construct()
     {
@@ -84,7 +91,8 @@ class Notification
         $allowedTypes = [
             self::TYPE_POST_REACTION,
             self::TYPE_POST_COMMENT,
-            self::TYPE_COMMENT_REPLY
+            self::TYPE_COMMENT_REPLY,
+            self::TYPE_MODERATOR_ESCALATION
         ];
 
         if (!in_array($type, $allowedTypes, true)) {
@@ -114,6 +122,28 @@ class Notification
     public function setCommentId(?int $commentId): self
     {
         $this->commentId = $commentId;
+        return $this;
+    }
+
+    public function getMessage(): ?string
+    {
+        return $this->message;
+    }
+
+    public function setMessage(?string $message): self
+    {
+        $this->message = $message;
+        return $this;
+    }
+
+    public function getMetadata(): ?array
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(?array $metadata): self
+    {
+        $this->metadata = $metadata;
         return $this;
     }
 

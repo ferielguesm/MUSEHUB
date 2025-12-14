@@ -1,0 +1,258 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Collection Harvard Art Museum - MuseHub{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <span class="pill-badge mb-3 d-inline-block">Harvard Art Museum</span>
+        <h1 class="display-5 fw-bold mb-2">Collection d'Art</h1>
+        <p class="lead text-muted">Découvrez les œuvres du Harvard Art Museum</p>
+        <div class="mt-3">
+            <a href="{{ path('artworks') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la galerie MuseHub
+            </a>
+        </div>
+    </div>
+
+    {% if info %}
+        <div class="alert alert-info mb-4">
+            <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Informations sur la collection</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Total d'œuvres:</strong> {{ info.totalrecords | default('N/A') }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Page actuelle:</strong> {{ page }}
+                </div>
+                {% if info.pages %}
+                    <div class="col-md-3">
+                        <strong>Pages totales:</strong> {{ info.pages }}
+                    </div>
+                {% endif %}
+                {% if info.next %}
+                    <div class="col-md-3">
+                        <strong>Page suivante:</strong> Disponible
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+        {% for artwork in artworks %}
+            <div class="col-md-6 col-lg-4" id="harvard-artwork-{{ loop.index }}">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        {% if artwork.images and artwork.images|length > 0 %}
+                            <div class="text-center mb-3">
+                                <img src="{{ artwork.images[0].baseimageurl | default(artwork.images[0].publiccaption) | default('#') }}"
+                                     alt="{{ artwork.title | default('Artwork') }}"
+                                     class="img-fluid rounded"
+                                     style="max-height: 250px; object-fit: cover; width: 100%;">
+                            </div>
+                        {% else %}
+                            <div class="text-center mb-3">
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                     style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <h5 class="card-title mb-2">
+                            {{ artwork.title | default('Sans titre') }}
+                        </h5>
+
+                        {% if artwork.people is defined and artwork.people and artwork.people is iterable %}
+                            <p class="card-text text-muted small mb-2">
+                                <i class="fas fa-user me-1"></i>
+                                {% for person in artwork.people %}
+                                    {{ person.name | default(person.displayname) | default(person) }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        {% elseif artwork.culture %}
+                            <p class="card-text text-muted small mb-2">
+                                <i class="fas fa-globe me-1"></i>{{ artwork.culture }}
+                            </p>
+                        {% endif %}
+
+                        {% if artwork.dated %}
+                            <p class="card-text text-muted small mb-2">
+                                <i class="fas fa-calendar me-1"></i>{{ artwork.dated }}
+                            </p>
+                        {% endif %}
+
+                        {% if artwork.classification %}
+                            <div class="mb-2">
+                                <span class="badge bg-secondary">{{ artwork.classification | join(', ') }}</span>
+                            </div>
+                        {% endif %}
+
+                        {% if artwork.description %}
+                            <p class="card-text small text-muted mb-3" style="flex-grow: 1;">
+                                {{ artwork.description | slice(0, 150) }}{% if artwork.description | length > 150 %}...{% endif %}
+                            </p>
+                        {% endif %}
+
+                        <div class="mt-auto">
+                            {% if artwork.url %}
+                                <a href="{{ artwork.url }}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fas fa-external-link-alt me-1"></i>Voir sur Harvard
+                                </a>
+                            {% endif %}
+
+                            {% if artwork.images and artwork.images|length > 0 %}
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showArtworkModal({{ loop.index }})">
+                                    <i class="fas fa-eye me-1"></i>Détails
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>Aucune œuvre trouvée pour cette page.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if info and info.pages and info.pages > 1 %}
+        <nav aria-label="Harvard collection pagination" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('harvard_collection', {'page': page - 1}) }}">
+                            <i class="fas fa-chevron-left"></i> Précédent
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% set startPage = max(1, page - 2) %}
+                {% set endPage = min(info.pages, page + 2) %}
+
+                {% if startPage > 1 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('harvard_collection', {'page': 1}) }}">1</a>
+                    </li>
+                    {% if startPage > 2 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endif %}
+
+                {% for pageNum in startPage..endPage %}
+                    <li class="page-item {{ pageNum == page ? 'active' : '' }}">
+                        <a class="page-link" href="{{ path('harvard_collection', {'page': pageNum}) }}">{{ pageNum }}</a>
+                    </li>
+                {% endfor %}
+
+                {% if endPage < info.pages %}
+                    {% if endPage < info.pages - 1 %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('harvard_collection', {'page': info.pages}) }}">{{ info.pages }}</a>
+                    </li>
+                {% endif %}
+
+                {% if page < info.pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ path('harvard_collection', {'page': page + 1}) }}">
+                            Suivant <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<!-- Artwork Detail Modal -->
+<div class="modal fade" id="artworkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="artworkModalTitle">Détails de l'œuvre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="artworkModalContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Store artworks data for modal
+    const harvardArtworks = {{ artworks|json_encode()|raw }};
+
+    function showArtworkModal(index) {
+        const artwork = harvardArtworks[index - 1]; // Adjust for 1-based index
+        if (!artwork) return;
+
+        const modal = new bootstrap.Modal(document.getElementById('artworkModal'));
+        const content = document.getElementById('artworkModalContent');
+
+        let html = '<div class="row">';
+
+        if (artwork.images && artwork.images.length > 0) {
+            const imageUrl = artwork.images[0].baseimageurl || artwork.images[0].publiccaption || '#';
+            html += `
+                <div class="col-md-6">
+                    <img src="${imageUrl}" alt="${artwork.title || 'Artwork'}"
+                         class="img-fluid rounded mb-3" style="width: 100%;">
+                </div>
+                <div class="col-md-6">
+            `;
+        } else {
+            html += '<div class="col-12">';
+        }
+
+        html += `
+            <h4>${artwork.title || 'Sans titre'}</h4>
+        `;
+
+        if (artwork.people && Array.isArray(artwork.people) && artwork.people.length > 0) {
+            const artists = artwork.people.map(p => p.name || p.displayname || p).join(', ');
+            html += `<p><strong>Artiste(s):</strong> ${artists}</p>`;
+        } else if (artwork.culture) {
+            html += `<p><strong>Culture:</strong> ${artwork.culture}</p>`;
+        }
+
+        if (artwork.dated) {
+            html += `<p><strong>Date:</strong> ${artwork.dated}</p>`;
+        }
+
+        if (artwork.classification && artwork.classification.length > 0) {
+            html += `<p><strong>Classification:</strong> ${artwork.classification.join(', ')}</p>`;
+        }
+
+        if (artwork.medium) {
+            html += `<p><strong>Technique:</strong> ${artwork.medium}</p>`;
+        }
+
+        if (artwork.dimensions) {
+            html += `<p><strong>Dimensions:</strong> ${artwork.dimensions}</p>`;
+        }
+
+        if (artwork.description) {
+            html += `<p><strong>Description:</strong> ${artwork.description}</p>`;
+        }
+
+        if (artwork.url) {
+            html += `<p><a href="${artwork.url}" target="_blank" class="btn btn-primary">Voir sur le site de Harvard</a></p>`;
+        }
+
+        html += '</div></div>';
+
+        content.innerHTML = html;
+        modal.show();
+    }
+</script>
+{% endblock %}

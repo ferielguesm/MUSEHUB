@@ -145,6 +145,45 @@ class NotificationService
     }
 
     /**
+     * Create notification for moderator escalation from chatbot
+     */
+    public function createModeratorEscalationNotification(?string $userUuid, string $originalMessage, string $reason): ?Notification
+    {
+        // Find all admin users to notify
+        $adminUsers = $this->em->getRepository(\App\Entity\User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%ROLE_ADMIN%')
+            ->getQuery()
+            ->getResult();
+
+        if (empty($adminUsers)) {
+            return null;
+        }
+
+        $notifications = [];
+        foreach ($adminUsers as $admin) {
+            $notification = new Notification();
+            $notification->setRecipientUuid($admin->getUuid());
+            $notification->setActorUuid($userUuid ?: 'chatbot');
+            $notification->setType(Notification::TYPE_MODERATOR_ESCALATION);
+            $notification->setMessage($reason);
+            $notification->setMetadata([
+                'original_message' => $originalMessage,
+                'escalation_type' => 'chatbot',
+                'user_uuid' => $userUuid,
+            ]);
+
+            $this->em->persist($notification);
+            $notifications[] = $notification;
+        }
+
+        $this->em->flush();
+
+        return $notifications[0] ?? null;
+    }
+
+    /**
      * Mark all notifications as read for a user
      */
     public function markAllAsReadForUser(string $userUuid): int

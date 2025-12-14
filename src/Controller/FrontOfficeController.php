@@ -6,6 +6,7 @@ use App\Repository\ArtworkRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\EventRepository;
 use App\Repository\ListingRepository;
+use App\Repository\OffreRepository;
 use App\Repository\ParticipantRepository;
 use App\Repository\PostReactionRepository;
 use App\Repository\PostRepository;
@@ -22,6 +23,7 @@ class FrontOfficeController extends AbstractController
         private CategoryRepository $categoryRepository,
         private EventRepository $eventRepository,
         private ListingRepository $listingRepository,
+        private OffreRepository $offreRepository,
         private PostRepository $postRepository,
         private PostReactionRepository $postReactionRepository,
         private ParticipantRepository $participantRepository,
@@ -159,6 +161,13 @@ class FrontOfficeController extends AbstractController
     public function marketplace(): Response
     {
         $listings = $this->listingRepository->findAvailable();
+
+        // Get offers for each listing
+        $offresParListing = [];
+        foreach ($listings as $listing) {
+            $offresParListing[$listing->getId()] = $this->offreRepository->findByListing($listing->getId());
+        }
+
         // Get artworks that the user owns (if logged in as artist) for creating listings
         $userArtworks = [];
         $user = $this->getUser();
@@ -171,6 +180,7 @@ class FrontOfficeController extends AbstractController
 
         return $this->render('front/marketplace.html.twig', [
             'listings' => $listings,
+            'offresParListing' => $offresParListing,
             'userArtworks' => $userArtworks,
         ]);
     }
@@ -189,18 +199,25 @@ class FrontOfficeController extends AbstractController
     }
 
     #[Route('/community', name: 'community')]
-    public function community(): Response
+    public function community(Request $request, \App\Repository\PostCategoryRepository $categoryRepository): Response
     {
-        $posts = $this->postRepository->findBy([], ['createdAt' => 'DESC'], 20);
+        $category = $request->query->get('category');
+        $sort = $request->query->get('sort', 'recent');
+
+        $posts = $this->postRepository->findWithFilters($category, $sort, 20);
         $authorNames = $this->buildAuthorNamesMap($posts);
         $commentAuthorNames = $this->buildCommenterNamesMap($posts);
         $userReactions = $this->buildUserReactionMap($posts);
+        $categories = $categoryRepository->findAll();
 
         return $this->render('front/community.html.twig', [
             'posts' => $posts,
+            'categories' => $categories,
             'authorNames' => $authorNames,
             'commentAuthorNames' => $commentAuthorNames,
             'userReactions' => $userReactions,
+            'currentCategory' => $category,
+            'currentSort' => $sort,
         ]);
     }
 

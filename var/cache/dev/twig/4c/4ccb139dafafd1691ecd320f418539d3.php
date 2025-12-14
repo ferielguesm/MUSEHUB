@@ -1224,6 +1224,6 @@ class __TwigTemplate_109cc43d260bdfe390291bc49fbccd14 extends Template
     </div>
 </div>
 {% endblock %}
-", "front/home.html.twig", "C:\\xampp\\htdocs\\MuseHub-my-work\\MuseHub-my-work\\templates\\front\\home.html.twig");
+", "front/home.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\front\\home.html.twig");
     }
 }

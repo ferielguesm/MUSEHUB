@@ -119,15 +119,33 @@
                             </span>
                         </td>
                         <td>
-                            <a href="{{ path('admin_artwork_edit', {id: artwork.id}) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit me-1"></i>Modifier
-                            </a>
-                            <form action="{{ path('admin_artwork_delete', {id: artwork.id}) }}" method="post" style="display:inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete_artwork_' ~ artwork.id) }}">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cette œuvre ?');">
-                                    <i class="fas fa-trash me-1"></i>Supprimer
-                                </button>
-                            </form>
+                            <div class="btn-group" role="group">
+                                <a href="{{ path('admin_artwork_edit', {id: artwork.id}) }}" class="btn btn-sm btn-primary" title="Modifier l'œuvre">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                {% if artwork.imageUrl %}
+                                    <a href="https://tineye.com/search?url={{ artwork.imageUrl|url_encode }}" target="_blank"
+                                       class="btn btn-sm btn-outline-info" title="Vérifier l'image sur TinEye"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-search-plus"></i>
+                                    </a>
+                                {% endif %}
+
+                                <a href="https://www.harvardartmuseums.org/collections?search={{ artwork.title|url_encode }}" target="_blank"
+                                   class="btn btn-sm btn-outline-success" title="Rechercher dans le catalogue Harvard"
+                                   data-bs-toggle="tooltip">
+                                    <i class="fas fa-university"></i>
+                                </a>
+
+                                <form action="{{ path('admin_artwork_delete', {id: artwork.id}) }}" method="post" style="display:inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_artwork_' ~ artwork.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Supprimer l'œuvre"
+                                            onclick="return confirm('Supprimer cette œuvre ?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
@@ -143,5 +161,14 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
