@@ -8,6 +8,6 @@ data.ms/
 meilisearch.exe
 *.exe
 
-###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
-###< lexik/jwt-authentication-bundle ###
+# PHPUnit cache files
+.phpunit.result.cache
+.phpunit.cache/
