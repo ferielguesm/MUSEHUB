@@ -26,7 +26,8 @@ class CommentController extends AbstractController
         private CommentRepository $commentRepository,
         private ContentFilter $contentFilter,
         private NotificationService $notificationService,
-        private CommentModerationService $moderationService
+        private CommentModerationService $moderationService,
+        private \App\Service\DiscordNotificationService $discordService
     ) {
     }
 
@@ -70,7 +71,17 @@ class CommentController extends AbstractController
         $comment->setContent($filterResult['filteredContent']);
 
         $this->em->persist($comment);
+        $post->incrementCommentsCount();
         $this->em->flush();
+
+        // Discord Notification
+        $this->discordService->sendNotification(
+            sprintf("💬 **%s** commented on post **%s**:\n> %s", 
+                $user->getUserIdentifier(), 
+                $post->getTitle(), 
+                substr($comment->getContent(), 0, 100) . (strlen($comment->getContent()) > 100 ? '...' : '')
+            )
+        );
 
         return $this->json([
             'id' => $comment->getId(),
@@ -176,6 +187,7 @@ class CommentController extends AbstractController
         $reply->setParentComment($parentComment);
 
         $this->em->persist($reply);
+        $parentComment->getPost()->incrementCommentsCount();
         $this->em->flush();
 
         // Create notification for comment reply
@@ -208,7 +220,9 @@ class CommentController extends AbstractController
             return $this->json(['error' => 'Not authorized to delete this comment'], Response::HTTP_FORBIDDEN);
         }
 
+        $post = $comment->getPost();
         $this->em->remove($comment);
+        $post->decrementCommentsCount();
         $this->em->flush();
 
         return $this->json(['message' => 'Comment deleted successfully']);

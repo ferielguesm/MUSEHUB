@@ -1,0 +1,1 @@
+{"version":2,"defects":{"App\\Tests\\Controller\\ArtworkAdminControllerTest::testArtworkCreationFlow":8,"App\\Tests\\Controller\\ArtworkAdminControllerTest::testLikeFunctionality":8},"times":{"App\\Tests\\Controller\\ArtworkAdminControllerTest::testArtworkCreationFlow":1.226,"App\\Tests\\Controller\\ArtworkAdminControllerTest::testLikeFunctionality":0.223}}

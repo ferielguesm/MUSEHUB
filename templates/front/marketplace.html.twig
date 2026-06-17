@@ -2,264 +2,345 @@
 
 {% block title %}Marketplace - MuseHub{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        body {
+            background: #f0f2f5;
+        }
+        
+        .listing-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(23, 15, 46, 0.08);
+            border: 1px solid rgba(127, 0, 255, 0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(23, 15, 46, 0.12);
+        }
+        
+        .listing-image-container {
+            height: 250px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .listing-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .listing-card:hover .listing-image {
+            transform: scale(1.05);
+        }
+        
+        .price-badge {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #2d3748;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            backdrop-filter: blur(4px);
+        }
+        
+        .create-listing-card {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(23, 15, 46, 0.08);
+            border: 1px solid rgba(127, 0, 255, 0.08);
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .offer-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff6b6b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .btn-action {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .artwork-title {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+        
+        .artist-name {
+            color: #718096;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-pills-custom .nav-link {
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #4a5568;
+            background: white;
+            border: 1px solid #e2e8f0;
+            margin-right: 10px;
+        }
+        
+        .nav-pills-custom .nav-link:hover {
+            background: #e2e8f0;
+        }
+        
+        .nav-pills-custom .nav-link.active {
+            background: #2d3748;
+            color: white;
+            border-color: #2d3748;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 <div class="container my-5">
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold mb-3">Marketplace</h1>
-        <p class="lead text-muted">Achetez des œuvres d'art authentiques</p>
-    </div>
-
-    <!-- Formulaire de création d'annonce -->
-    {% if app.user and ('ROLE_ARTIST' in app.user.roles or 'ROLE_ADMIN' in app.user.roles) %}
-    <div class="card mb-5">
-        <div class="card-body">
-            <h5 class="card-title mb-3">
-                <i class="fas fa-plus-circle me-2"></i>Créer une nouvelle annonce
-            </h5>
-            <form action="{{ path('web_marketplace_listing_create') }}" method="POST" id="listingForm">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Œuvre *</label>
-                        <select class="form-select" name="artwork_uuid" required>
-                            <option value="">Sélectionner une œuvre</option>
-                            {% for artwork in userArtworks %}
-                                <option value="{{ artwork.artistUuid }}-{{ artwork.id }}">{{ artwork.title }} {% if artwork.price %}({{ artwork.price }} €){% endif %}</option>
-                            {% endfor %}
-                        </select>
-                        {% if userArtworks|length == 0 %}
-                            <small class="text-muted">Vous devez d'abord créer une œuvre dans la section Œuvres.</small>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Prix (€) *</label>
-                        <input type="number" step="0.01" class="form-control" name="price" required>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Stock</label>
-                        <input type="number" class="form-control" name="stock" value="1" min="1">
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary" {% if userArtworks|length == 0 %}disabled{% endif %}>
-                        <i class="fas fa-save me-2"></i>Créer l'annonce
-                    </button>
-                </div>
-            </form>
+        <p class="lead text-muted">Découvrez et achetez des œuvres d'art authentiques</p>
+        
+        <div class="mt-4">
+            {% if app.user %}
+                <a href="{{ path('marketplace_my_offers') }}" class="btn btn-outline-secondary rounded-pill me-2">
+                    <i class="fas fa-handshake me-2"></i>Mes Offres
+                </a>
+                {% if 'ROLE_ARTIST' in app.user.roles or 'ROLE_ADMIN' in app.user.roles %}
+                    <a href="{{ path('marketplace_received_offers') }}" class="btn btn-primary rounded-pill">
+                        <i class="fas fa-inbox me-2"></i>Offres Reçues
+                    </a>
+                {% endif %}
+            {% endif %}
         </div>
+    </div>
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show rounded-pill" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show rounded-pill" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {# Create Listing Form - Only for Artists and Admins #}
+    {% if app.user and ('ROLE_ARTIST' in app.user.roles or 'ROLE_ADMIN' in app.user.roles) %}
+    <div class="create-listing-card">
+        <h3 class="mb-4">
+            <i class="fas fa-plus-circle me-2"></i>Créer une Nouvelle Annonce
+        </h3>
+        <form action="{{ path('web_marketplace_listing_create') }}" method="POST">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Œuvre *</label>
+                    <select class="form-select form-select-lg" name="artwork_uuid" required>
+                        <option value="">Sélectionner une œuvre</option>
+                        {% for artwork in userArtworks %}
+                            <option value="{{ artwork.artistUuid }}-{{ artwork.id }}">
+                                {{ artwork.title }} {% if artwork.price %}({{ artwork.price }} €){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if userArtworks|length == 0 %}
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle me-1"></i>Créez d'abord une œuvre dans la section Œuvres
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Prix (€) *</label>
+                    <input type="number" step="0.01" class="form-control form-control-lg" name="price" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Stock</label>
+                    <input type="number" class="form-control form-control-lg" name="stock" value="1" min="1">
+                </div>
+            </div>
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5" {% if userArtworks|length == 0 %}disabled{% endif %}>
+                    <i class="fas fa-rocket me-2"></i>Publier l'Annonce
+                </button>
+            </div>
+        </form>
     </div>
     {% endif %}
 
-    <div class="row g-4">
-        {% for listing in listings %}
-        <div class="col-md-6 col-lg-4" id="listing-{{ listing.id }}">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Annonce #{{ listing.id }}</h5>
-                    <p class="text-muted small mb-2">
-                        <span class="badge bg-{{ listing.status == 'available' ? 'success' : 'danger' }}">
-                            {{ listing.status == 'available' ? 'Disponible' : 'Épuisé' }}
-                        </span>
-                        {% if listing.stock > 0 %}
-                            <span class="badge bg-info">{{ listing.stock }} en stock</span>
-                        {% endif %}
-                    </p>
-                    <div class="mb-3">
-                        <h3 class="text-primary fw-bold">{{ listing.price }} €</h3>
-                    </div>
-                    <p class="text-muted small">
-                        <i class="fas fa-tag me-1"></i>Artwork UUID: {{ listing.artworkUuid|slice(0, 8) }}...
-                    </p>
-
-                    <!-- Affichage des offres -->
-                    {% if offresParListing[listing.id] is not empty %}
-                    <div class="alert alert-info mt-3 mb-3">
-                        <h6 class="mb-2"><i class="fas fa-handshake me-2"></i>Offres reçues</h6>
-                        <div class="small">
-                            {% for offre in offresParListing[listing.id] %}
-                                <div class="mb-2 pb-2 border-bottom">
-                                    <strong>{{ offre.utilisateur.email }}</strong>
-                                    <span class="badge bg-warning">{{ offre.prixPropose }} €</span>
-                                    <span class="badge {% if offre.statut == 'En attente' %}bg-warning{% elseif offre.statut == 'Acceptée' %}bg-success{% else %}bg-danger{% endif %}">
-                                        {{ offre.statut }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">{{ offre.datePropose|date('d/m/Y H:i') }}</small>
-                                    {% if offre.commentaire %}
-                                        <br><em>{{ offre.commentaire|slice(0, 50) }}{% if offre.commentaire|length > 50 %}...{% endif %}</em>
-                                    {% endif %}
+    {# Listings Grid #}
+    {% if listings is empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-bag fa-5x text-muted mb-4"></i>
+            <h3 class="text-muted">Aucune annonce disponible</h3>
+            <p class="text-muted">Revenez plus tard pour découvrir de nouvelles œuvres !</p>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for listing in listings %}
+                {% set artwork = artworksParListing[listing.id] ?? null %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="listing-card">
+                        <div class="listing-image-container">
+                            {% if artwork and artwork.imageUrl %}
+                                <img src="{{ artwork.imageUrl }}" alt="{{ artwork.title }}" class="listing-image">
+                            {% else %}
+                                <div class="listing-image d-flex align-items-center justify-content-center bg-light">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
                                 </div>
-                            {% endfor %}
+                            {% endif %}
+                            
+                            <span class="status-badge {{ listing.status == 'available' ? 'bg-white text-success' : 'bg-white text-danger' }}">
+                                <i class="fas fa-circle me-1 small"></i>{{ listing.status == 'available' ? 'Disponible' : 'Épuisé' }}
+                            </span>
+                            
+                            <div class="price-badge">
+                                {{ listing.price }} €
+                            </div>
+                            
+                            {% if offresParListing[listing.id] is not empty %}
+                                <span class="offer-badge">
+                                    <i class="fas fa-fire me-1"></i>{{ offresParListing[listing.id]|length }} offre(s)
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            {% if artwork %}
+                                <h5 class="artwork-title">{{ artwork.title }}</h5>
+                                <p class="artist-name">
+                                    <i class="fas fa-palette me-2 text-primary"></i>{{ artwork.artistName ?? 'Artiste' }}
+                                </p>
+                                {% if artwork.description %}
+                                    <p class="text-muted small mb-3">
+                                        {{ artwork.description|slice(0, 80) }}{% if artwork.description|length > 80 %}...{% endif %}
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                <h5 class="artwork-title">Annonce #{{ listing.id }}</h5>
+                            {% endif %}
+                            
+                            <div class="mt-4 d-grid gap-2">
+                                {% if listing.status == 'available' and app.user %}
+                                    <form method="POST" action="{{ path('marketplace_checkout', {id: listing.id}) }}">
+                                        <button type="submit" class="btn btn-primary btn-action btn-buy w-100">
+                                            <i class="fas fa-shopping-cart me-2"></i>Acheter
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#offreModal{{ listing.id }}">
+                                        <i class="fas fa-handshake me-2"></i>Faire une Offre
+                                    </button>
+                                {% elseif listing.status == 'available' %}
+                                    <a href="{{ path('login') }}" class="btn btn-outline-primary btn-action">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-action" disabled>
+                                        <i class="fas fa-ban me-2"></i>Épuisé
+                                    </button>
+                                {% endif %}
+                            </div>
+                            
+                            {% if listing.stock > 0 %}
+                                <div class="text-end mt-2">
+                                    <small class="text-muted"><i class="fas fa-box me-1"></i>{{ listing.stock }} en stock</small>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endif %}
-                    <div class="mt-3 d-grid gap-2">
-                        <a href="{{ path('marketplace_offer_show', {id: listing.id}) }}" class="btn btn-outline-secondary btn-sm">
-                            Consulter l'offre
-                        </a>
-                        {% if listing.status == 'available' and app.user %}
-                            <!-- Bouton Acheter Maintenant -->
-                            <button type="button" class="btn btn-success btn-sm btn-buy" data-listing-id="{{ listing.id }}">
-                                <i class="fas fa-shopping-cart me-1"></i> Acheter maintenant
-                            </button>
-                            <!-- Bouton pour ouvrir le formulaire de création d'offre -->
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#offreModal{{ listing.id }}">
-                                <i class="fas fa-handshake"></i> Faire une Offre
-                            </button>
-                        {% elseif listing.status == 'available' %}
-                            <a href="{{ path('login') }}" class="btn btn-outline-primary btn-sm">Se connecter pour acheter</a>
-                        {% else %}
-                            <button class="btn btn-secondary btn-sm" disabled>Épuisé</button>
-                        {% endif %}
-                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Modal de création d'offre -->
-        {% if listing.status == 'available' and app.user %}
-        <div class="modal fade" id="offreModal{{ listing.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="fas fa-handshake"></i> Faire une offre pour Annonce #{{ listing.id }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                {# Offer Modal #}
+                {% if listing.status == 'available' and app.user %}
+                <div class="modal fade" id="offreModal{{ listing.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title fw-bold">
+                                    <i class="fas fa-handshake me-2 text-primary"></i>Faire une Offre
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" action="{{ path('web_marketplace_offre_create') }}">
+                                <div class="modal-body">
+                                    {% if artwork %}
+                                        <div class="text-center mb-4">
+                                            <h6 class="fw-bold">{{ artwork.title }}</h6>
+                                            <p class="text-muted small">{{ artwork.artistName ?? 'Artiste' }}</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Prix de l'Annonce</label>
+                                        <input type="text" class="form-control form-control-lg" value="{{ listing.price }} €" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Votre Offre (€) *</label>
+                                        <input type="number" step="0.01" name="prix_propose" class="form-control form-control-lg" required placeholder="Entrez votre prix">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Message (optionnel)</label>
+                                        <textarea name="commentaire" class="form-control" rows="3" placeholder="Ajoutez un message pour le vendeur..."></textarea>
+                                    </div>
+                                    <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                        <i class="fas fa-paper-plane me-2"></i>Envoyer l'Offre
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <form method="POST" action="{{ path('web_marketplace_offre_create') }}">
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label class="form-label">Prix de l'Annonce</label>
-                                <input type="text" class="form-control" value="{{ listing.price }} €" disabled>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Votre Prix Proposé (€) *</label>
-                                <input type="number" step="0.01" name="prix_propose" class="form-control" required placeholder="Entrez votre offre">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Commentaire (optionnel)</label>
-                                <textarea name="commentaire" class="form-control" rows="3" placeholder="Message pour le vendeur..."></textarea>
-                            </div>
-                            <input type="hidden" name="listing_id" value="{{ listing.id }}">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Envoyer l'Offre
-                            </button>
-                        </div>
-                    </form>
                 </div>
-            </div>
+                {% endif %}
+            {% endfor %}
         </div>
-        {% endif %}
-        {% else %}
-        <div class="col-12">
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle me-2"></i>Aucune annonce disponible pour le moment.
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            function handleBuyClick(e) {
-                e.preventDefault();
-                const btn = e.currentTarget;
-                const listingId = btn.dataset.listingId;
-                if (!listingId) return;
-
-                // Confirmation
-                if (!confirm('Confirmer l\'achat de cette annonce ?')) {
-                    return;
-                }
-
-                btn.disabled = true;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Traitement...';
-
-                fetch('/api/marketplace/buy/' + listingId, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(async (res) => {
-                    const data = await res.json();
-                    if (!res.ok) {
-                        throw new Error(data.error || res.statusText || 'Erreur inconnue');
-                    }
-                    return data;
-                })
-                .then((data) => {
-                    // Stripe : rediriger vers le checkout
-                    if (data.checkoutUrl) {
-                        showSuccessAlert(
-                            'Redirection Stripe...',
-                            'Vous allez être redirigé vers le paiement'
-                        );
-                        setTimeout(() => {
-                            window.location.href = data.checkoutUrl;
-                        }, 1000);
-                    } else {
-                        // Fallback (achat direct sans Stripe)
-                        showSuccessAlert(
-                            'Achat réussi !',
-                            'Votre commande a été créée.'
-                        );
-                        setTimeout(() => {
-                            window.location.href = '{{ path("marketplace") }}';
-                        }, 2000);
-                    }
-                })
-                .catch((err) => {
-                    console.error('Buy error:', err);
-                    showErrorAlert(
-                        'Erreur',
-                        err.message || 'Impossible d\'effectuer l\'achat'
-                    );
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                });
-            }
-
-            // Attacher le handler aux boutons avec classe 'btn-buy'
-            document.querySelectorAll('.btn-buy').forEach(function (el) {
-                el.addEventListener('click', handleBuyClick);
-            });
-        });
-
-        // Fonctions d'alerte
-        function showSuccessAlert(title, message) {
-            const alertHtml = `
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                    <strong>${title}</strong><br>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', alertHtml);
-        }
-
-        function showErrorAlert(title, message) {
-            const alertHtml = `
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                    <strong>${title}</strong><br>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', alertHtml);
-            setTimeout(() => {
-                document.querySelector('.alert-danger')?.remove();
-            }, 5000);
-        }
+        // Custom marketplace scripts
     </script>
 {% endblock %}
-
-

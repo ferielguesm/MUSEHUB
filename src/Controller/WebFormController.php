@@ -159,12 +159,12 @@ class WebFormController extends AbstractController
         $participant = new Participant();
         $participant->setEventUuid($event->getUuid());
         $participant->setParticipantUuid($user->getUuid());
-        $participant->setStatus('confirmed');
+        $participant->setStatus('pending');
 
         $this->em->persist($participant);
         $this->em->flush();
 
-        $this->addFlash('success', 'Inscription confirmée !');
+        $this->addFlash('success', 'Votre demande d\'inscription a été envoyée et est en attente de validation.');
         return $this->redirectToRoute('events');
     }
 
@@ -199,9 +199,15 @@ class WebFormController extends AbstractController
     }
 
     #[Route('/marketplace/listing/create', name: 'web_marketplace_listing_create', methods: ['POST'])]
-    #[IsGranted('ROLE_ARTIST')]
     public function createListing(Request $request): Response
     {
+        // Check if user has ROLE_ARTIST or ROLE_ADMIN
+        $user = $this->getUser();
+        if (!$user || (!in_array('ROLE_ARTIST', $user->getRoles()) && !in_array('ROLE_ADMIN', $user->getRoles()))) {
+            $this->addFlash('error', 'Seuls les artistes et administrateurs peuvent créer des annonces.');
+            return $this->redirectToRoute('marketplace');
+        }
+
         $artworkUuid = $request->request->get('artwork_uuid');
         $price = $request->request->get('price');
 
@@ -641,6 +647,28 @@ class WebFormController extends AbstractController
         $offre->setStatut('En attente');
 
         $this->em->persist($offre);
+        
+        // Create notification for seller
+        // Extract seller UUID from artwork UUID (format: artistUuid-artworkId)
+        $artworkUuid = $listing->getArtworkUuid();
+        $separatorPos = strrpos($artworkUuid, '-');
+        if ($separatorPos !== false) {
+            $sellerUuid = substr($artworkUuid, 0, $separatorPos);
+            
+            $notification = new \App\Entity\Notification();
+            $notification->setRecipientUuid($sellerUuid);
+            $notification->setActorUuid($user->getUuid());
+            $notification->setType(\App\Entity\Notification::TYPE_OFFER_RECEIVED);
+            $notification->setMessage("Nouvelle offre de {$prixProposeFloat}€ reçue sur votre annonce !");
+            $notification->setMetadata([
+                'offer_id' => $offre->getId(),
+                'listing_id' => $listing->getId(),
+                'price' => $prixProposeFloat,
+            ]);
+            
+            $this->em->persist($notification);
+        }
+        
         $this->em->flush();
 
         $this->addFlash('success', 'Votre offre a été envoyée avec succès !');

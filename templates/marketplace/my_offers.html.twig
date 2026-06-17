@@ -1,0 +1,79 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mes Offres Envoyées - MuseHub{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">Mes Offres Envoyées</h1>
+            <p class="text-muted">Suivez le statut de vos offres d'achat</p>
+        </div>
+        <a href="{{ path('marketplace') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Retour au Marketplace
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% if offers is empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-handshake fa-4x text-muted mb-3"></i>
+            <h3>Aucune offre envoyée</h3>
+            <p class="text-muted">Vous n'avez pas encore fait d'offre sur le marketplace.</p>
+            <a href="{{ path('marketplace') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-shopping-bag me-2"></i>Explorer le Marketplace
+            </a>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for offer in offers %}
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="card-title mb-2">
+                                        Offre pour Annonce #{{ offer.listing.id }}
+                                    </h5>
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Envoyée le {{ offer.datePropose|date('d/m/Y à H:i') }}
+                                    </p>
+                                    {% if offer.commentaire %}
+                                        <p class="mb-2">
+                                            <strong>Votre message :</strong><br>
+                                            <em>{{ offer.commentaire }}</em>
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <h3 class="text-primary fw-bold mb-2">{{ offer.prixPropose }} €</h3>
+                                    {% if offer.statut == 'En attente' %}
+                                        <span class="badge bg-warning text-dark px-3 py-2">
+                                            <i class="fas fa-clock me-1"></i>En attente
+                                        </span>
+                                    {% elseif offer.statut == 'Acceptée' %}
+                                        <span class="badge bg-success px-3 py-2">
+                                            <i class="fas fa-check-circle me-1"></i>Acceptée
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger px-3 py-2">
+                                            <i class="fas fa-times-circle me-1"></i>Refusée
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

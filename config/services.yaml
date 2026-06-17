@@ -17,6 +17,7 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
+            $discordWebhookUrl: '%env(DISCORD_WEBHOOK_URL)%'
             # OpenAI API for comment moderation
             $openaiApiKey: '%env(OPENAI_API_KEY)%'
             $openaiApiUrl: 'https://api.openai.com/v1'
@@ -34,3 +35,22 @@ services:
             $apiKey: '%env(HARVARD_API_KEY)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # OpenAI Service Configuration
+    App\Service\OpenAIService:
+        arguments:
+            $apiKey: '%env(OPENAI_API_KEY)%'
+
+    App\Service\StripePaymentService:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
+    App\Service\MatrixService:
+        arguments:
+            $matrixHomeserver: '%env(MATRIX_HOMESERVER)%'
+            $matrixAccessToken: '%env(MATRIX_ACCESS_TOKEN)%'
+            $matrixUserId: '%env(MATRIX_USER_ID)%'
+
+    App\Service\IssoService:
+        arguments:
+            $issoUrl: '%env(ISSO_URL)%'

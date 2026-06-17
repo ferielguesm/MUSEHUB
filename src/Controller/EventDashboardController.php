@@ -23,7 +23,8 @@ class EventDashboardController extends AbstractController
         private EventTypeRepository $eventTypeRepository,
         private ParticipantRepository $participantRepository,
         private EntityManagerInterface $em,
-        private ParticipantNotificationService $notificationService
+        private ParticipantNotificationService $notificationService,
+        private \App\Service\EventNotificationService $emailNotificationService
     ) {
     }
 
@@ -342,9 +343,41 @@ class EventDashboardController extends AbstractController
                     $this->notificationService->sendStatusChangeEmail($participant, $event, $user, $newStatus);
                     $emailSent = true;
                 } catch (\Exception $e) {
-                    // Log l'erreur mais continue
                     error_log('Erreur envoi email: ' . $e->getMessage());
                 }
+
+                // Send Mailpit email notification
+                try {
+                    if ($newStatus === 'confirmed') {
+                        $this->emailNotificationService->sendAcceptanceNotification($event, $user);
+                    } elseif ($newStatus === 'rejected') {
+                        $this->emailNotificationService->sendRejectionNotification($event, $user);
+                    }
+                } catch (\Exception $e) {
+                    error_log('Erreur envoi email Mailpit: ' . $e->getMessage());
+                }
+
+                // --- NEW : Create Persisted Notification ---
+                $notification = new \App\Entity\Notification();
+                $notification->setRecipientUuid($user->getUuid());
+                $notification->setActorUuid($this->getUser()->getUuid()); // Admin is the actor
+                $notification->setType(\App\Entity\Notification::TYPE_EVENT_STATUS_UPDATE);
+                
+                $message = match($newStatus) {
+                    'confirmed' => "Votre inscription à l'événement \"{$event->getTitle()}\" a été confirmée !",
+                    'rejected' => "Votre inscription à l'événement \"{$event->getTitle()}\" a été refusée.",
+                    'pending' => "Votre statut pour l'événement \"{$event->getTitle()}\" est maintenant en attente.",
+                    default => "Mise à jour de votre inscription pour \"{$event->getTitle()}\"."
+                };
+                $notification->setMessage($message);
+                $notification->setMetadata([
+                    'event_id' => $event->getId(),
+                    'event_title' => $event->getTitle(),
+                    'new_status' => $newStatus
+                ]);
+                $this->em->persist($notification);
+                $this->em->flush();
+                // -------------------------------------------
             } else {
                 error_log('Utilisateur non trouvé pour UUID: ' . $participant->getParticipantUuid());
             }

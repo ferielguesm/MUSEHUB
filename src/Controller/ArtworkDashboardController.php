@@ -22,7 +22,8 @@ class ArtworkDashboardController extends AbstractController
         private CategoryRepository $categoryRepository,
         private EntityManagerInterface $em,
         private \App\Service\HarvardArtService $harvardArtService,
-        private \App\Repository\CatalogueRepository $catalogueRepository
+        private \App\Repository\CatalogueRepository $catalogueRepository,
+        private \App\Repository\ArtworkLikeRepository $artworkLikeRepository
     ) {
     }
 
@@ -88,124 +89,64 @@ class ArtworkDashboardController extends AbstractController
     #[Route('/new', name: 'admin_artwork_new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            $title = $request->request->get('title');
-            $artistUuid = $request->request->get('artist_uuid');
+        $artwork = new Artwork();
+        
+        // Auto-fill artistUuid with current user's UUID
+        $user = $this->getUser();
+        if ($user) {
+            $artwork->setArtistUuid($user->getUuid());
+        }
+        
+        $form = $this->createForm(\App\Form\ArtworkType::class, $artwork);
+        $form->handleRequest($request);
 
-            if ($title && $artistUuid) {
-                $artwork = new Artwork();
-                $artwork->setTitle($title);
-                $artwork->setArtistUuid($artistUuid);
-                $artwork->setDescription($request->request->get('description') ?: null);
-                
-                // Validation: Image is mandatory on creation
-                if (!$request->files->get('image_file') && !$request->request->get('image_url')) {
-                    $this->addFlash('error', 'L\'image est obligatoire pour une nouvelle œuvre.');
-                    return $this->redirectToRoute('admin_artwork_new');
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Handle file upload
+            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
+
+            if ($imageFile) {
+                $newFilename = $this->handleFileUpload($imageFile);
+                if ($newFilename) {
+                    $artwork->setImageUrl('/uploads/artworks/' . $newFilename);
                 }
-
-                // Validation: Price must be positive
-                $price = $request->request->get('price');
-                if ($price !== null && $price < 0) {
-                    $this->addFlash('error', 'Le prix ne peut pas être négatif.');
-                    return $this->redirectToRoute('admin_artwork_new');
-                }
-
-                // Validation: Category is mandatory
-                $categoryId = $request->request->getInt('category_id');
-                if (!$categoryId) {
-                     $this->addFlash('error', 'La catégorie est obligatoire.');
-                     return $this->redirectToRoute('admin_artwork_new');
-                }
-
-                $imageUrl = null;
-                $uploadedFile = $request->files->get('image_file');
-                
-                if ($uploadedFile && $uploadedFile->isValid()) {
-                    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                    if (!in_array($uploadedFile->getMimeType(), $allowedMimeTypes)) {
-                        $this->addFlash('error', 'Format d\'image non supporté.');
-                        return $this->redirectToRoute('admin_artwork_new');
-                    }
-                    
-                    if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
-                        $this->addFlash('error', 'L\'image est trop volumineuse (max 5MB).');
-                        return $this->redirectToRoute('admin_artwork_new');
-                    }
-                    
-                    $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                    $extension = $uploadedFile->guessExtension();
-                    $newFilename = $originalFilename . '_' . uniqid() . '.' . $extension;
-                    
-                    $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/artworks';
-                    if (!is_dir($uploadsDir)) {
-                        mkdir($uploadsDir, 0755, true);
-                    }
-                    
-                    try {
-                        $uploadedFile->move($uploadsDir, $newFilename);
-                        $imageUrl = '/uploads/artworks/' . $newFilename;
-                    } catch (\Exception $e) {
-                        $this->addFlash('error', 'Erreur lors de l\'upload: ' . $e->getMessage());
-                        return $this->redirectToRoute('admin_artwork_new');
-                    }
-                } elseif ($request->request->get('image_url')) {
-                    $imageUrl = $request->request->get('image_url');
-                }
-                
-                $artwork->setImageUrl($imageUrl);
-                $artwork->setPrice($price ?: null);
-                $artwork->setStatus($request->request->get('status') ?: 'visible');
-
-                // Category processing (Already validated presence)
-                $category = $this->categoryRepository->find($categoryId);
-                if ($category) {
-                    $artwork->setCategory($category);
-                } else {
-                     $this->addFlash('error', 'Catégorie invalide.');
-                     return $this->redirectToRoute('admin_artwork_new');
-                }
-
-                $this->em->persist($artwork);
-                $this->em->flush();
-
-                // Check for Automatic Catalogue Creation
-                if ($this->getUser()) {
-                    $user = $this->getUser();
-                    $userArtworksCount = $this->artworkRepository->count(['artistUuid' => $user->getUuid()]); // Assuming artistUuid links to user. Or we should link via User entity if we changed it.
-                    // Wait, Artwork stores artistUuid string, not User entity. 
-                    // But in 'new', we set artistUuid from form or current user.
-                    // Let's assume artistUuid == current user uuid.
-                    if ($userArtworksCount >= 3) {
-                         // Check if catalogue exists
-                         $existingCatalogue = $this->catalogueRepository->findOneBy(['user' => $user]);
-                         if (!$existingCatalogue) {
-                             $catalogue = new \App\Entity\Catalogue();
-                             $catalogue->setName('Catalogue de ' . ($user->getFirstName() ?: 'l\'artiste'));
-                             $catalogue->setUser($user);
-                             $this->em->persist($catalogue);
-                             
-                             // Add existing artworks to catalogue
-                             $userArtworks = $this->artworkRepository->findBy(['artistUuid' => $user->getUuid()]);
-                             foreach ($userArtworks as $art) {
-                                 $art->setCatalogue($catalogue);
-                             }
-                             
-                             $this->em->flush();
-                             $this->addFlash('success', 'Félicitations ! Un catalogue a été généré automatiquement pour vos œuvres.');
-                         }
-                    }
-                }
-
-                $this->addFlash('success', 'Œuvre créée avec succès !');
-                return $this->redirectToRoute('admin_artworks_list');
             }
+            
+            $this->em->persist($artwork);
+            $this->em->flush();
+
+            // Automatic Catalogue Creation Logic
+            if ($this->getUser()) {
+                $user = $this->getUser();
+                $userArtworksCount = $this->artworkRepository->count(['artistUuid' => $user->getUuid()]); 
+
+                if ($userArtworksCount >= 3) {
+                     // Check if catalogue exists
+                     $existingCatalogue = $this->catalogueRepository->findOneBy(['user' => $user]);
+                     if (!$existingCatalogue) {
+                         $catalogue = new \App\Entity\Catalogue();
+                         $catalogue->setName('Catalogue de ' . ($user->getFirstName() ?: 'l\'artiste'));
+                         $catalogue->setUser($user);
+                         $this->em->persist($catalogue);
+                         
+                         // Add existing artworks to catalogue
+                         $userArtworks = $this->artworkRepository->findBy(['artistUuid' => $user->getUuid()]);
+                         foreach ($userArtworks as $art) {
+                             $art->setCatalogue($catalogue);
+                         }
+                         
+                         $this->em->flush();
+                         $this->addFlash('success', 'Félicitations ! Un catalogue a été généré automatiquement pour vos œuvres.');
+                     }
+                }
+            }
+
+            $this->addFlash('success', 'Œuvre créée avec succès !');
+            return $this->redirectToRoute('admin_artworks_list');
         }
 
-        $categories = $this->categoryRepository->findAll();
-
         return $this->render('artwork/admin_form.html.twig', [
-            'categories' => $categories,
+            'form' => $form->createView(),
             'artwork' => null,
             'action' => 'new',
         ]);
@@ -219,94 +160,39 @@ class ArtworkDashboardController extends AbstractController
             throw $this->createNotFoundException('Artwork not found');
         }
 
-        if ($request->isMethod('POST')) {
-            $title = $request->request->get('title');
-            $artistUuid = $request->request->get('artist_uuid');
+        $form = $this->createForm(\App\Form\ArtworkType::class, $artwork, [
+            'is_new' => false // Editing existing artwork
+        ]);
+        $form->handleRequest($request);
 
-            if ($title && $artistUuid) {
-                $artwork->setTitle($title);
-                $artwork->setArtistUuid($artistUuid);
-                $artwork->setDescription($request->request->get('description') ?: null);
-                
-                // Validation: Price must be positive
-                $price = $request->request->get('price');
-                if ($price !== null && $price < 0) {
-                    $this->addFlash('error', 'Le prix ne peut pas être négatif.');
-                    return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
+        if ($form->isSubmitted() && $form->isValid()) {
+             /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile */
+            $imageFile = $form->get('imageFile')->getData();
+
+            if ($imageFile) {
+                // Delete old image if local
+                $oldImageUrl = $artwork->getImageUrl();
+                if ($oldImageUrl && strpos($oldImageUrl, '/uploads/artworks/') === 0) {
+                     $oldImagePath = $this->getParameter('kernel.project_dir') . '/public' . $oldImageUrl;
+                     if (file_exists($oldImagePath)) {
+                         @unlink($oldImagePath);
+                     }
                 }
 
-                // Validation: Category is mandatory
-                $categoryId = $request->request->getInt('category_id');
-                if (!$categoryId) {
-                     $this->addFlash('error', 'La catégorie est obligatoire.');
-                     return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
+                $newFilename = $this->handleFileUpload($imageFile);
+                if ($newFilename) {
+                    $artwork->setImageUrl('/uploads/artworks/' . $newFilename);
                 }
-
-                $uploadedFile = $request->files->get('image_file');
-                
-                if ($uploadedFile && $uploadedFile->isValid()) {
-                    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                    if (!in_array($uploadedFile->getMimeType(), $allowedMimeTypes)) {
-                        $this->addFlash('error', 'Format d\'image non supporté.');
-                        return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
-                    }
-                    
-                    if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
-                        $this->addFlash('error', 'L\'image est trop volumineuse (max 5MB).');
-                        return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
-                    }
-                    
-                    $oldImageUrl = $artwork->getImageUrl();
-                    if ($oldImageUrl && strpos($oldImageUrl, '/uploads/artworks/') === 0) {
-                        $oldImagePath = $this->getParameter('kernel.project_dir') . '/public' . $oldImageUrl;
-                        if (file_exists($oldImagePath)) {
-                            @unlink($oldImagePath);
-                        }
-                    }
-                    
-                    $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-                    $extension = $uploadedFile->guessExtension();
-                    $newFilename = $originalFilename . '_' . uniqid() . '.' . $extension;
-                    
-                    $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/artworks';
-                    if (!is_dir($uploadsDir)) {
-                        mkdir($uploadsDir, 0755, true);
-                    }
-                    
-                    try {
-                        $uploadedFile->move($uploadsDir, $newFilename);
-                        $artwork->setImageUrl('/uploads/artworks/' . $newFilename);
-                    } catch (\Exception $e) {
-                        $this->addFlash('error', 'Erreur lors de l\'upload: ' . $e->getMessage());
-                        return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
-                    }
-                } elseif ($request->request->get('image_url')) {
-                    $artwork->setImageUrl($request->request->get('image_url'));
-                }
-                
-                $artwork->setPrice($price ?: null);
-                $artwork->setStatus($request->request->get('status') ?: 'visible');
-
-                // Category processing (Already validated presence)
-                $category = $this->categoryRepository->find($categoryId);
-                if ($category) {
-                    $artwork->setCategory($category);
-                } else {
-                     $this->addFlash('error', 'Catégorie invalide.');
-                     return $this->redirectToRoute('admin_artwork_edit', ['id' => $id]);
-                }
-
-                $this->em->flush();
-                
-                $this->addFlash('success', 'Œuvre mise à jour avec succès !');
-                return $this->redirectToRoute('admin_artworks_list');
             }
+
+            $this->em->flush();
+
+            $this->addFlash('success', 'Œuvre mise à jour avec succès !');
+            return $this->redirectToRoute('admin_artworks_list');
         }
 
-        $categories = $this->categoryRepository->findAll();
-
         return $this->render('artwork/admin_form.html.twig', [
-            'categories' => $categories,
+            'form' => $form->createView(),
             'artwork' => $artwork,
             'action' => 'edit',
         ]);
@@ -419,6 +305,51 @@ class ArtworkDashboardController extends AbstractController
         return $this->redirectToRoute('admin_category_index');
     }
 
+    #[Route('/{id}/like', name: 'admin_artwork_like', methods: ['POST'])]
+    public function like(int $id, Request $request): Response
+    {
+        $artwork = $this->artworkRepository->find($id);
+        if (!$artwork) {
+            return $this->json(['error' => 'Artwork not found'], 404);
+        }
+
+        $user = $this->getUser();
+        if (!$user) {
+             return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $existingLike = $this->artworkLikeRepository->findOneBy([
+            'artwork' => $artwork,
+            'user' => $user
+        ]);
+
+        if ($existingLike) {
+            $this->em->remove($existingLike);
+            $artwork->setLikesCount(max(0, $artwork->getLikesCount() - 1));
+            $liked = false;
+        } else {
+            $like = new \App\Entity\ArtworkLike();
+            $like->setArtwork($artwork);
+            $like->setUser($user);
+            $this->em->persist($like);
+            $artwork->setLikesCount($artwork->getLikesCount() + 1);
+            $liked = true;
+        }
+
+        $this->em->flush();
+
+        // If AJAX request, return JSON
+        if ($request->isXmlHttpRequest()) {
+            return $this->json([
+                'likes' => $artwork->getLikesCount(),
+                'liked' => $liked
+            ]);
+        }
+
+        // Fallback for standard form submission (redirect back)
+        return $this->redirectToRoute('admin_artworks_list');
+    }
+
     #[Route('/{id}/check-stolen', name: 'admin_artwork_check_stolen', methods: ['GET'])]
     public function checkStolen(int $id): Response
     {
@@ -436,5 +367,28 @@ class ArtworkDashboardController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => $e->getMessage()], 500);
         }
+    }
+    private function handleFileUpload($file): ?string
+    {
+        $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeFilename = preg_replace('/[^a-zA-Z0-9]/', '_', $originalFilename); 
+        $newFilename = $safeFilename.'-'.uniqid().'.'.$file->guessExtension();
+
+        $uploadsDir = $this->getParameter('kernel.project_dir') . '/public/uploads/artworks';
+        if (!is_dir($uploadsDir)) {
+            mkdir($uploadsDir, 0755, true);
+        }
+
+        try {
+            $file->move(
+                $uploadsDir,
+                $newFilename
+            );
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de l\'upload: ' . $e->getMessage());
+            return null;
+        }
+
+        return $newFilename;
     }
 }

@@ -4,6 +4,11 @@
 
 {% block body %}
 <div class="container my-5">
+    <div class="mb-4">
+        <a href="{{ path('artworks') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>Retour
+        </a>
+    </div>
     <div class="row">
         <div class="col-md-6">
             {% if artwork.imageUrl %}

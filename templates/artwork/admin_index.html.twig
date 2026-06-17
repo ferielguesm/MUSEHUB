@@ -125,18 +125,25 @@
                                 </a>
 
                                 {% if artwork.imageUrl %}
-                                    <a href="https://tineye.com/search?url={{ artwork.imageUrl|url_encode }}" target="_blank"
-                                       class="btn btn-sm btn-outline-info" title="Vérifier l'image sur TinEye"
+                                    <a href="https://tineye.com/search?url={{ absolute_url(asset(artwork.imageUrl))|url_encode }}" target="_blank"
+                                       class="btn btn-sm btn-outline-info" title="Vérifier sur TinEye (Stolen Check)"
                                        data-bs-toggle="tooltip">
                                         <i class="fas fa-search-plus"></i>
                                     </a>
                                 {% endif %}
 
                                 <a href="https://www.harvardartmuseums.org/collections?search={{ artwork.title|url_encode }}" target="_blank"
-                                   class="btn btn-sm btn-outline-success" title="Rechercher dans le catalogue Harvard"
+                                   class="btn btn-sm btn-outline-success" title="Vérifier sur Harvard Art Museums"
                                    data-bs-toggle="tooltip">
                                     <i class="fas fa-university"></i>
                                 </a>
+
+                                <form action="{{ path('admin_artwork_like', {id: artwork.id}) }}" method="post" style="display:inline" class="me-1">
+                                    <button type="submit" class="btn btn-sm {{ artwork.isLikedBy(app.user) ? 'btn-danger' : 'btn-outline-danger' }}" title="{{ artwork.isLikedBy(app.user) ? 'Je n\'aime plus' : 'J\'aime' }}">
+                                        <i class="{{ artwork.isLikedBy(app.user) ? 'fas' : 'far' }} fa-heart"></i>
+                                        <span class="ms-1">{{ artwork.likesCount }}</span>
+                                    </button>
+                                </form>
 
                                 <form action="{{ path('admin_artwork_delete', {id: artwork.id}) }}" method="post" style="display:inline">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_artwork_' ~ artwork.id) }}">

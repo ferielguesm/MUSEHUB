@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participation Acceptée</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #48bb78;
+        }
+        .header h1 {
+            color: #48bb78;
+            margin: 0;
+            font-size: 28px;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #48bb78;
+            margin: 20px 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .event-details {
+            background: #f7fafc;
+            border-left: 4px solid #48bb78;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .event-details h3 {
+            margin-top: 0;
+            color: #2d3748;
+        }
+        .detail-item {
+            margin: 10px 0;
+            padding: 8px 0;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Félicitations !</h1>
+            <p>Votre participation a été acceptée</p>
+        </div>
+
+        <div class="content">
+            <p>Bonjour <strong>{{ user.email }}</strong>,</p>
+            
+            <p>Nous avons le plaisir de vous informer que votre demande de participation à l'événement suivant a été <strong>acceptée</strong> :</p>
+
+            <div class="event-details">
+                <h3>{{ event.title }}</h3>
+                
+                <div class="detail-item">
+                    <span class="detail-label">📅 Date :</span>
+                    {{ event.date|date('d/m/Y à H:i') }}
+                </div>
+
+                {% if event.location %}
+                <div class="detail-item">
+                    <span class="detail-label">📍 Lieu :</span>
+                    {{ event.location }}
+                </div>
+                {% endif %}
+
+                {% if event.description %}
+                <div class="detail-item">
+                    <span class="detail-label">📝 Description :</span>
+                    <p>{{ event.description|slice(0, 200) }}{% if event.description|length > 200 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+
+                {% if event.maxParticipants %}
+                <div class="detail-item">
+                    <span class="detail-label">👥 Participants max :</span>
+                    {{ event.maxParticipants }}
+                </div>
+                {% endif %}
+            </div>
+
+            <p>Nous sommes ravis de vous compter parmi les participants !</p>
+
+            <center>
+                <a href="http://localhost:8000/events/{{ event.id }}" class="cta-button">
+                    Voir les détails de l'événement
+                </a>
+            </center>
+
+            <p>À très bientôt,<br>
+            <strong>L'équipe MuseHub</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p>&copy; {{ "now"|date("Y") }} MuseHub - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>

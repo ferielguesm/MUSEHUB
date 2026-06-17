@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mise à jour de votre participation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f56565;
+        }
+        .header h1 {
+            color: #f56565;
+            margin: 0;
+            font-size: 28px;
+        }
+        .info-icon {
+            font-size: 60px;
+            color: #f56565;
+            margin: 20px 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .event-details {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .event-details h3 {
+            margin-top: 0;
+            color: #2d3748;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #4299e1;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="info-icon">ℹ️</div>
+            <h1>Mise à jour de votre participation</h1>
+        </div>
+
+        <div class="content">
+            <p>Bonjour <strong>{{ user.email }}</strong>,</p>
+            
+            <p>Nous vous informons que votre demande de participation à l'événement suivant n'a pas pu être acceptée :</p>
+
+            <div class="event-details">
+                <h3>{{ event.title }}</h3>
+                <p><strong>Date :</strong> {{ event.date|date('d/m/Y à H:i') }}</p>
+            </div>
+
+            <p>Nous vous remercions de votre intérêt et vous invitons à consulter nos autres événements disponibles.</p>
+
+            <center>
+                <a href="http://localhost:8000/events" class="cta-button">
+                    Découvrir d'autres événements
+                </a>
+            </center>
+
+            <p>Cordialement,<br>
+            <strong>L'équipe MuseHub</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <p>&copy; {{ "now"|date("Y") }} MuseHub - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>

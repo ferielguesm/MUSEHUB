@@ -1,0 +1,154 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ event.title }} - MuseHub{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="mb-4">
+        <a href="{{ path('events') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux événements
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold mb-4">{{ event.title }}</h1>
+            
+            <div class="d-flex align-items-center mb-4 text-muted">
+                <div class="me-4">
+                    <i class="fas fa-calendar-alt me-2 fa-lg text-primary"></i>
+                    <span class="h5 mb-0">{{ event.dateTime|date('d/m/Y') }}</span>
+                </div>
+                <div class="me-4">
+                    <i class="fas fa-clock me-2 fa-lg text-primary"></i>
+                    <span class="h5 mb-0">{{ event.dateTime|date('H:i') }}</span>
+                </div>
+                <div>
+                    {% if event.location == 'online' %}
+                        <span class="badge bg-success fs-6">En ligne</span>
+                    {% else %}
+                        <span class="badge bg-info fs-6">Présentiel</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if event.description %}
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="card-title mb-3">À propos de l'événement</h4>
+                    <p class="card-text lead" style="font-size: 1.1rem;">{{ event.description|nl2br }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if event.eventType %}
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Type d'événement: {{ event.eventType.name }}</h5>
+                    <p class="text-muted mb-0">{{ event.eventType.description }}</p>
+                    <div class="mt-3">
+                        <span class="badge bg-light text-dark border me-2">
+                            {{ event.eventType.requiresPayment ? 'Payant' : 'Gratuit' }}
+                        </span>
+                        {% if event.eventType.certificateEnabled %}
+                        <span class="badge bg-info text-white me-2">
+                            <i class="fas fa-certificate me-1"></i>Certifiant
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Map Section -->
+            {% if event.latitude and event.longitude %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                    <h4 class="mb-0"><i class="fas fa-map-marked-alt text-danger me-2"></i>Localisation</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div id="map" style="height: 400px; border-radius: 12px; z-index: 1;"></div>
+                    <div class="mt-3 text-end">
+                        <a href="https://maps.google.com/?q={{ event.latitude }},{{ event.longitude }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Ouvrir dans Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body p-4 text-center">
+                    <h3 class="mb-4">Inscription</h3>
+                    
+                    {% if app.user %}
+                        <form method="POST" action="{{ path(isRegistered ? 'web_events_unsubscribe' : 'web_events_subscribe', {id: event.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token((isRegistered ? 'unsubscribe_event_' : 'subscribe_event_') ~ event.id) }}">
+                            
+                            {% if isRegistered %}
+                                <div class="alert alert-success mb-4">
+                                    <i class="fas fa-check-circle me-2"></i>Vous êtes inscrit !
+                                </div>
+                                <button type="submit" class="btn btn-outline-danger btn-lg w-100">
+                                    Se désinscrire
+                                </button>
+                            {% else %}
+                                <div class="mb-4 text-start">
+                                    <p class="mb-2"><i class="fas fa-check text-success me-2"></i>Accès complet à l'événement</p>
+                                    <p class="mb-2"><i class="fas fa-check text-success me-2"></i>Rappels par email</p>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 pulse-button">
+                                    S'inscrire maintenant
+                                </button>
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning mb-4">
+                            Connectez-vous pour participer
+                        </div>
+                        <a href="{{ path('login') }}" class="btn btn-primary btn-lg w-100">Se connecter</a>
+                    {% endif %}
+
+                    <div class="mt-4 pt-3 border-top">
+                        <small class="text-muted d-block mb-2">Partager cet événement</small>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;"><i class="fab fa-facebook-f"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;"><i class="fab fa-twitter"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; padding: 0;"><i class="fab fa-linkedin-in"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if event.latitude and event.longitude %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var map = L.map('map').setView([{{ event.latitude }}, {{ event.longitude }}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([{{ event.latitude }}, {{ event.longitude }}]).addTo(map)
+        .bindPopup("<b>{{ event.title|e('js') }}</b><br>{{ event.location|e('js') }}")
+        .openPopup();
+});
+</script>
+{% endif %}
+
+<style>
+.pulse-button {
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+    70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+}
+</style>
+{% endblock %}

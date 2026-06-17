@@ -611,6 +611,6 @@ class __TwigTemplate_6d2ce04f4efe2c0c4caa51b337987bc9 extends Template
 </html>
 
 
-", "front/base.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\front\\base.html.twig");
+", "front/base.html.twig", "C:\\xampp\\htdocs\\Musehub3\\templates\\front\\base.html.twig");
     }
 }

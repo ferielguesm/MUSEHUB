@@ -262,31 +262,14 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
                                 <i class=\"fas fa-calendar-plus me-1\"></i>.ics
                             </a>
                         </div>
-                        <div class=\"col-3\">
-                            ";
+                        <div class=\"col-12 mt-2\">
+                             <a href=\"";
             // line 80
-            if ((CoreExtension::getAttribute($this->env, $this->source, $context["event"], "latitude", [], "any", false, false, false, 80) && CoreExtension::getAttribute($this->env, $this->source, $context["event"], "longitude", [], "any", false, false, false, 80))) {
-                // line 81
-                yield "                                <a href=\"https://maps.google.com/?q=";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["event"], "latitude", [], "any", false, false, false, 81), "html", null, true);
-                yield ",";
-                yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, $context["event"], "longitude", [], "any", false, false, false, 81), "html", null, true);
-                yield "\" 
-                                   class=\"btn btn-outline-info btn-sm w-100\" 
-                                   title=\"Voir sur Google Maps\"
-                                   target=\"_blank\">
-                                    <i class=\"fas fa-map-marker-alt me-1\"></i>Carte
-                                </a>
-                            ";
-            } else {
-                // line 88
-                yield "                                <button class=\"btn btn-outline-secondary btn-sm w-100\" disabled title=\"Pas de coordonnées GPS\">
-                                    <i class=\"fas fa-map-marker-alt me-1\"></i>Carte
-                                </button>
-                            ";
-            }
-            // line 92
-            yield "                        </div>
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("event_show", ["id" => CoreExtension::getAttribute($this->env, $this->source, $context["event"], "id", [], "any", false, false, false, 80)]), "html", null, true);
+            yield "\" class=\"btn btn-outline-primary btn-sm w-100\">
+                                <i class=\"fas fa-info-circle me-1\"></i>Voir détails et localisation
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -294,9 +277,9 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
         ";
             $context['_iterated'] = true;
         }
-        // line 97
+        // line 88
         if (!$context['_iterated']) {
-            // line 98
+            // line 89
             yield "        <div class=\"col-12\">
             <div class=\"alert alert-info text-center\">
                 <i class=\"fas fa-info-circle me-2\"></i>Aucun événement à venir pour le moment.
@@ -307,7 +290,7 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
         $_parent = $context['_parent'];
         unset($context['_seq'], $context['_key'], $context['event'], $context['_parent'], $context['_iterated']);
         $context = array_intersect_key($context, $_parent) + $_parent;
-        // line 104
+        // line 95
         yield "    </div>
 </div>
 ";
@@ -320,7 +303,7 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
         yield from [];
     }
 
-    // line 108
+    // line 99
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -333,7 +316,7 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f = $this->extensions["Symfony\\Bridge\\Twig\\Extension\\ProfilerExtension"];
         $__internal_6f47bbe9983af81f1e7450e9a3e3768f->enter($__internal_6f47bbe9983af81f1e7450e9a3e3768f_prof = new \Twig\Profiler\Profile($this->getTemplateName(), "block", "javascripts"));
 
-        // line 109
+        // line 100
         yield "    ";
         yield from $this->yieldParentBlock("javascripts", $context, $blocks);
         yield "
@@ -377,7 +360,7 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  337 => 109,  324 => 108,  311 => 104,  300 => 98,  298 => 97,  289 => 92,  283 => 88,  270 => 81,  268 => 80,  260 => 75,  256 => 73,  250 => 71,  245 => 68,  241 => 66,  237 => 64,  235 => 63,  231 => 62,  227 => 61,  222 => 60,  219 => 59,  217 => 58,  213 => 56,  204 => 54,  202 => 53,  199 => 52,  192 => 48,  181 => 47,  177 => 46,  173 => 45,  168 => 43,  164 => 42,  156 => 36,  154 => 35,  151 => 34,  147 => 32,  143 => 30,  141 => 29,  134 => 25,  127 => 21,  120 => 17,  115 => 14,  110 => 13,  101 => 6,  88 => 5,  65 => 3,  42 => 1,);
+        return array (  320 => 100,  307 => 99,  294 => 95,  283 => 89,  281 => 88,  268 => 80,  260 => 75,  256 => 73,  250 => 71,  245 => 68,  241 => 66,  237 => 64,  235 => 63,  231 => 62,  227 => 61,  222 => 60,  219 => 59,  217 => 58,  213 => 56,  204 => 54,  202 => 53,  199 => 52,  192 => 48,  181 => 47,  177 => 46,  173 => 45,  168 => 43,  164 => 42,  156 => 36,  154 => 35,  151 => 34,  147 => 32,  143 => 30,  141 => 29,  134 => 25,  127 => 21,  120 => 17,  115 => 14,  110 => 13,  101 => 6,  88 => 5,  65 => 3,  42 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -460,19 +443,10 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
                                 <i class=\"fas fa-calendar-plus me-1\"></i>.ics
                             </a>
                         </div>
-                        <div class=\"col-3\">
-                            {% if event.latitude and event.longitude %}
-                                <a href=\"https://maps.google.com/?q={{ event.latitude }},{{ event.longitude }}\" 
-                                   class=\"btn btn-outline-info btn-sm w-100\" 
-                                   title=\"Voir sur Google Maps\"
-                                   target=\"_blank\">
-                                    <i class=\"fas fa-map-marker-alt me-1\"></i>Carte
-                                </a>
-                            {% else %}
-                                <button class=\"btn btn-outline-secondary btn-sm w-100\" disabled title=\"Pas de coordonnées GPS\">
-                                    <i class=\"fas fa-map-marker-alt me-1\"></i>Carte
-                                </button>
-                            {% endif %}
+                        <div class=\"col-12 mt-2\">
+                             <a href=\"{{ path('event_show', {id: event.id}) }}\" class=\"btn btn-outline-primary btn-sm w-100\">
+                                <i class=\"fas fa-info-circle me-1\"></i>Voir détails et localisation
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -502,6 +476,6 @@ class __TwigTemplate_74e9267cccf2cc7de24119baedba4781 extends Template
     </script>
 {% endblock %}
 
-", "front/events.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\front\\events.html.twig");
+", "front/events.html.twig", "C:\\xampp\\htdocs\\Musehub3\\templates\\front\\events.html.twig");
     }
 }

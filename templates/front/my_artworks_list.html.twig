@@ -1,0 +1,190 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mes Œuvres - MuseHub{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    {# Header Section #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="fas fa-palette me-2 text-primary"></i>Mes Œuvres
+            </h1>
+            <p class="text-muted mb-0">Gérez votre collection d'œuvres d'art</p>
+        </div>
+        <a href="{{ path('my_artwork_new') }}" class="btn btn-primary btn-lg shadow-sm">
+            <i class="fas fa-plus-circle me-2"></i>Créer une œuvre
+        </a>
+    </div>
+
+    {# Flash Messages #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Statistics Cards #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-images fa-2x text-primary mb-2"></i>
+                    <h3 class="mb-0">{{ stats.total }}</h3>
+                    <p class="text-muted small mb-0">Total œuvres</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-eye fa-2x text-success mb-2"></i>
+                    <h3 class="mb-0">{{ stats.visible }}</h3>
+                    <p class="text-muted small mb-0">Visibles</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-eye-slash fa-2x text-warning mb-2"></i>
+                    <h3 class="mb-0">{{ stats.hidden }}</h3>
+                    <p class="text-muted small mb-0">Masquées</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                    <h3 class="mb-0">{{ stats.totalLikes }}</h3>
+                    <p class="text-muted small mb-0">J'aime total</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Artworks Grid #}
+    {% if artworks|length > 0 %}
+        <div class="row g-4">
+            {% for artwork in artworks %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        {# Image #}
+                        <div class="position-relative">
+                            {% if artwork.imageUrl %}
+                                <img src="{{ artwork.imageUrl }}" alt="{{ artwork.title }}" 
+                                     class="card-img-top" style="height: 250px; object-fit: cover;">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                     style="height: 250px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            
+                            {# Status Badge #}
+                            <span class="position-absolute top-0 start-0 m-2 badge {{ artwork.status == 'visible' ? 'bg-success' : 'bg-warning' }}">
+                                <i class="fas fa-{{ artwork.status == 'visible' ? 'eye' : 'eye-slash' }} me-1"></i>
+                                {{ artwork.status == 'visible' ? 'Visible' : 'Masqué' }}
+                            </span>
+
+                            {# Likes Badge #}
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-light text-dark">
+                                <i class="fas fa-heart text-danger me-1"></i>{{ artwork.likesCount }}
+                            </span>
+                        </div>
+
+                        {# Card Body #}
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate mb-2">{{ artwork.title }}</h5>
+                            
+                            {% if artwork.category %}
+                                <span class="badge bg-info bg-opacity-10 text-info mb-2">
+                                    {{ artwork.category.name }}
+                                </span>
+                            {% endif %}
+
+                            {% if artwork.description %}
+                                <p class="card-text text-muted small">
+                                    {{ artwork.description|length > 100 ? artwork.description|slice(0, 100) ~ '...' : artwork.description }}
+                                </p>
+                            {% endif %}
+
+                            <p class="fw-bold text-primary mb-0">
+                                {{ artwork.price ? artwork.price ~ ' €' : 'Prix sur demande' }}
+                            </p>
+                        </div>
+
+                        {# Card Footer - Actions #}
+                        <div class="card-footer bg-white border-top d-flex gap-2">
+                            <a href="{{ path('artwork_show', {id: artwork.id}) }}" 
+                               class="btn btn-sm btn-outline-primary flex-fill">
+                                <i class="fas fa-eye me-1"></i>Voir
+                            </a>
+                            <a href="{{ path('my_artwork_edit', {id: artwork.id}) }}" 
+                               class="btn btn-sm btn-outline-secondary flex-fill">
+                                <i class="fas fa-edit me-1"></i>Modifier
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ artwork.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {# Delete Confirmation Modal #}
+                <div class="modal fade" id="deleteModal{{ artwork.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header border-0">
+                                <h5 class="modal-title">Confirmer la suppression</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer l'œuvre <strong>{{ artwork.title }}</strong> ?</p>
+                                <p class="text-danger small mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Cette action est irréversible.
+                                </p>
+                            </div>
+                            <div class="modal-footer border-0">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <form action="{{ path('my_artwork_delete', {id: artwork.id}) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_artwork_' ~ artwork.id) }}">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash me-1"></i>Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        {# Empty State #}
+        <div class="text-center py-5">
+            <i class="fas fa-palette fa-5x text-muted mb-4"></i>
+            <h3 class="mb-3">Aucune œuvre pour le moment</h3>
+            <p class="text-muted mb-4">Commencez à partager votre art avec le monde !</p>
+            <a href="{{ path('my_artwork_new') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i>Créer ma première œuvre
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+</style>
+{% endblock %}

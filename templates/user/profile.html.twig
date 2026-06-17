@@ -202,6 +202,52 @@
     <div class="container profile-content">
         <div class="row g-4">
             <div class="col-lg-8">
+                <!-- Notifications Section -->
+                <div class="glass-card mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h4 class="mb-0">
+                            <i class="fas fa-bell me-2 text-primary"></i>Notifications
+                        </h4>
+                        {% if notifications|default([]) is not empty %}
+                            <span class="badge bg-danger rounded-pill">{{ notifications|length }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if notifications|default([]) is empty %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="far fa-bell-slash fa-2x mb-2"></i>
+                            <p>Aucune notification pour le moment</p>
+                        </div>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for notif in notifications %}
+                                <div class="list-group-item bg-transparent border-0 px-0 py-3 d-flex align-items-start {{ notif.isRead ? 'opacity-50' : '' }}">
+                                    <div class="me-3">
+                                        {% if notif.type == 'event_status_update' %}
+                                            <div class="rounded-circle p-2 bg-info bg-opacity-10 text-info">
+                                                <i class="fas fa-calendar-check"></i>
+                                            </div>
+                                        {% else %}
+                                            <div class="rounded-circle p-2 bg-primary bg-opacity-10 text-primary">
+                                                <i class="fas fa-info"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <p class="mb-1 text-dark">{{ notif.message }}</p>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i>{{ notif.createdAt|date('d/m/Y H:i') }}
+                                        </small>
+                                    </div>
+                                    {% if not notif.isRead %}
+                                        <span class="badge bg-primary rounded-circle p-1 ms-2" title="Non lu"> </span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
                 <div class="glass-card mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <h4 class="mb-0"><i class="fas fa-id-card me-2 text-primary"></i>À propos</h4>
@@ -244,13 +290,27 @@
                             {{ form_label(form.bio) }}
                             {{ form_widget(form.bio) }}
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             {{ form_label(form.avatar) }}
                             {{ form_widget(form.avatar) }}
                             <div class="upload-hint mt-2">
                                 <i class="fas fa-info-circle me-1"></i>JPG, PNG, GIF ou WEBP – 5 Mo max.
                             </div>
                         </div>
+
+                        <hr class="my-4 text-muted opacity-25">
+
+                        <h6 class="mb-3 text-primary"><i class="fas fa-lock me-2"></i>Changer de mot de passe</h6>
+                        <div class="mb-3">
+                            {{ form_label(form.currentPassword) }}
+                            {{ form_widget(form.currentPassword) }}
+                            <div class="form-text text-muted">Requis uniquement si vous changez de mot de passe.</div>
+                        </div>
+                        <div class="mb-4">
+                            {{ form_label(form.plainPassword) }}
+                            {{ form_widget(form.plainPassword) }}
+                        </div>
+
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-2"></i>Enregistrer les modifications
                         </button>

@@ -48,6 +48,10 @@ class Notification
     public const TYPE_POST_COMMENT = 'post_comment';
     public const TYPE_COMMENT_REPLY = 'comment_reply';
     public const TYPE_MODERATOR_ESCALATION = 'moderator_escalation';
+    public const TYPE_EVENT_STATUS_UPDATE = 'event_status_update';
+    public const TYPE_OFFER_ACCEPTED = 'offer_accepted';
+    public const TYPE_OFFER_REJECTED = 'offer_rejected';
+    public const TYPE_OFFER_RECEIVED = 'offer_received';
 
     public function __construct()
     {
@@ -92,7 +96,11 @@ class Notification
             self::TYPE_POST_REACTION,
             self::TYPE_POST_COMMENT,
             self::TYPE_COMMENT_REPLY,
-            self::TYPE_MODERATOR_ESCALATION
+            self::TYPE_MODERATOR_ESCALATION,
+            self::TYPE_EVENT_STATUS_UPDATE,
+            self::TYPE_OFFER_ACCEPTED,
+            self::TYPE_OFFER_REJECTED,
+            self::TYPE_OFFER_RECEIVED,
         ];
 
         if (!in_array($type, $allowedTypes, true)) {

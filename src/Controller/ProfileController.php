@@ -29,7 +29,9 @@ class ProfileController extends AbstractController
         private ParameterBagInterface $parameterBag,
         private SluggerInterface $slugger,
         private UserPasswordHasherInterface $passwordHasher,
-        private \App\Service\UserService $userService
+        private \App\Service\UserService $userService,
+        private \App\Repository\NotificationRepository $notificationRepository
+
     ) {
     }
 
@@ -109,10 +111,13 @@ class ProfileController extends AbstractController
             'interactions' => $this->entityManager->getRepository(Comment::class)->count(['commenterUuid' => $uuid]),
         ];
 
+        $notifications = $this->notificationRepository->findByUser($user->getUuid(), 5); // Latest 5
+
         return $this->render('user/profile.html.twig', [
             'user' => $user,
             'form' => $form->createView(),
             'stats' => $stats,
+            'notifications' => $notifications,
         ]);
     }
 }

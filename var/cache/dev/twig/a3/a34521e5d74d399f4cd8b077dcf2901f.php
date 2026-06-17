@@ -213,6 +213,15 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
             transform: translateY(-2px);
             box-shadow: 0 16px 30px rgba(196, 159, 255, 0.35);
         }
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-color: transparent;
+            color: white;
+        }
         .form-control, .form-select {
             border-radius: 8px;
             border: 1px solid #e5e7eb;
@@ -245,9 +254,9 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         }
     </style>
     ";
-        // line 193
+        // line 202
         yield from $this->unwrap()->yieldBlock('stylesheets', $context, $blocks);
-        // line 194
+        // line 203
         yield "</head>
 <body>
     <div class=\"sidebar\">
@@ -255,60 +264,54 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
             <h4><i class=\"fas fa-palette me-2\"></i>MuseHub Admin</h4>
         </div>
         <nav class=\"nav flex-column\">
-            <a class=\"nav-link active\" href=\"";
-        // line 201
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_dashboard");
-        yield "\">
-                <i class=\"fas fa-home\"></i>Dashboard
-            </a>
-            <a class=\"nav-link\" href=\"";
-        // line 204
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_users_list");
-        yield "\">
-                <i class=\"fas fa-users\"></i>Utilisateurs
-            </a>
-            <a class=\"nav-link\" href=\"";
-        // line 207
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_artworks_list");
-        yield "\">
-                <i class=\"fas fa-paint-brush\"></i>Œuvres
-            </a>
             <a class=\"nav-link\" href=\"";
         // line 210
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_events_list");
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_dashboard");
         yield "\">
-                <i class=\"fas fa-calendar-alt\"></i>Événements
+                <i class=\"fas fa-tachometer-alt\"></i> Dashboard
             </a>
             <a class=\"nav-link\" href=\"";
         // line 213
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_event_types_list");
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_artworks_list");
         yield "\">
-                <i class=\"fas fa-tags\"></i>Types d'événements
+                <i class=\"fas fa-palette\"></i> Artworks
             </a>
             <a class=\"nav-link\" href=\"";
         // line 216
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_marketplace_list");
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_community_list");
         yield "\">
-                <i class=\"fas fa-shopping-cart\"></i>Marketplace
+                <i class=\"fas fa-comments\"></i> Communauté
             </a>
             <a class=\"nav-link\" href=\"";
         // line 219
-        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_community_list");
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_marketplace_list");
         yield "\">
-                <i class=\"fas fa-comments\"></i>Communauté
+                <i class=\"fas fa-store\"></i> Marketplace
             </a>
-            <hr style=\"border-color: rgba(255,255,255,0.2); margin: 20px 10px;\">
             <a class=\"nav-link\" href=\"";
-        // line 223
+        // line 222
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_users_list");
+        yield "\">
+                <i class=\"fas fa-users\"></i> Users
+            </a>
+            <a class=\"nav-link\" href=\"";
+        // line 225
+        yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("admin_events_list");
+        yield "\">
+                <i class=\"fas fa-calendar\"></i> Events
+            </a>
+            <hr style=\"border-color: rgba(255,255,255,0.2); margin: 15px 0;\">
+            <a class=\"nav-link\" href=\"";
+        // line 229
         yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("home");
         yield "\">
-                <i class=\"fas fa-arrow-left\"></i>Retour au site
+                <i class=\"fas fa-home\"></i> Retour au site
             </a>
             <a class=\"nav-link\" href=\"";
-        // line 226
+        // line 232
         yield $this->extensions['Symfony\Bridge\Twig\Extension\RoutingExtension']->getPath("logout");
         yield "\">
-                <i class=\"fas fa-sign-out-alt\"></i>Déconnexion
+                <i class=\"fas fa-sign-out-alt\"></i> Déconnexion
             </a>
         </nav>
     </div>
@@ -317,8 +320,8 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         <div class=\"topbar\">
             <div>
                 <h5 class=\"mb-0\">Bienvenue, ";
-        // line 235
-        yield (((($tmp = CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 235, $this->source); })()), "user", [], "any", false, false, false, 235)) && $tmp instanceof Markup ? (string) $tmp : $tmp)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 235, $this->source); })()), "user", [], "any", false, false, false, 235), "username", [], "any", false, false, false, 235), "html", null, true)) : ("Admin"));
+        // line 241
+        yield (((($tmp = CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 241, $this->source); })()), "user", [], "any", false, false, false, 241)) && $tmp instanceof Markup ? (string) $tmp : $tmp)) ? ($this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape(CoreExtension::getAttribute($this->env, $this->source, CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 241, $this->source); })()), "user", [], "any", false, false, false, 241), "username", [], "any", false, false, false, 241), "html", null, true)) : ("Admin"));
         yield "</h5>
                 <small class=\"text-muted\">Dashboard Administrateur</small>
             </div>
@@ -329,31 +332,13 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
 
         <!-- Flash Messages -->
         ";
-        // line 244
-        $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 244, $this->source); })()), "flashes", ["success"], "method", false, false, false, 244));
-        foreach ($context['_seq'] as $context["_key"] => $context["message"]) {
-            // line 245
-            yield "            <div class=\"alert alert-success alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
-                <i class=\"fas fa-check-circle me-2\"></i>";
-            // line 246
-            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["message"], "html", null, true);
-            yield "
-                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\"></button>
-            </div>
-        ";
-        }
-        $_parent = $context['_parent'];
-        unset($context['_seq'], $context['_key'], $context['message'], $context['_parent']);
-        $context = array_intersect_key($context, $_parent) + $_parent;
         // line 250
-        yield "        ";
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 250, $this->source); })()), "flashes", ["error"], "method", false, false, false, 250));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 250, $this->source); })()), "flashes", ["success"], "method", false, false, false, 250));
         foreach ($context['_seq'] as $context["_key"] => $context["message"]) {
             // line 251
-            yield "            <div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
-                <i class=\"fas fa-exclamation-circle me-2\"></i>";
+            yield "            <div class=\"alert alert-success alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
+                <i class=\"fas fa-check-circle me-2\"></i>";
             // line 252
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["message"], "html", null, true);
             yield "
@@ -367,11 +352,11 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         // line 256
         yield "        ";
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 256, $this->source); })()), "flashes", ["warning"], "method", false, false, false, 256));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 256, $this->source); })()), "flashes", ["error"], "method", false, false, false, 256));
         foreach ($context['_seq'] as $context["_key"] => $context["message"]) {
             // line 257
-            yield "            <div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
-                <i class=\"fas fa-exclamation-triangle me-2\"></i>";
+            yield "            <div class=\"alert alert-danger alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
+                <i class=\"fas fa-exclamation-circle me-2\"></i>";
             // line 258
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["message"], "html", null, true);
             yield "
@@ -385,11 +370,11 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         // line 262
         yield "        ";
         $context['_parent'] = $context;
-        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 262, $this->source); })()), "flashes", ["info"], "method", false, false, false, 262));
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 262, $this->source); })()), "flashes", ["warning"], "method", false, false, false, 262));
         foreach ($context['_seq'] as $context["_key"] => $context["message"]) {
             // line 263
-            yield "            <div class=\"alert alert-info alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
-                <i class=\"fas fa-info-circle me-2\"></i>";
+            yield "            <div class=\"alert alert-warning alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
+                <i class=\"fas fa-exclamation-triangle me-2\"></i>";
             // line 264
             yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["message"], "html", null, true);
             yield "
@@ -401,18 +386,36 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         unset($context['_seq'], $context['_key'], $context['message'], $context['_parent']);
         $context = array_intersect_key($context, $_parent) + $_parent;
         // line 268
+        yield "        ";
+        $context['_parent'] = $context;
+        $context['_seq'] = CoreExtension::ensureTraversable(CoreExtension::getAttribute($this->env, $this->source, (isset($context["app"]) || array_key_exists("app", $context) ? $context["app"] : (function () { throw new RuntimeError('Variable "app" does not exist.', 268, $this->source); })()), "flashes", ["info"], "method", false, false, false, 268));
+        foreach ($context['_seq'] as $context["_key"] => $context["message"]) {
+            // line 269
+            yield "            <div class=\"alert alert-info alert-dismissible fade show\" role=\"alert\" style=\"border-radius: 10px;\">
+                <i class=\"fas fa-info-circle me-2\"></i>";
+            // line 270
+            yield $this->env->getRuntime('Twig\Runtime\EscaperRuntime')->escape($context["message"], "html", null, true);
+            yield "
+                <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\"></button>
+            </div>
+        ";
+        }
+        $_parent = $context['_parent'];
+        unset($context['_seq'], $context['_key'], $context['message'], $context['_parent']);
+        $context = array_intersect_key($context, $_parent) + $_parent;
+        // line 274
         yield "
         ";
-        // line 269
+        // line 275
         yield from $this->unwrap()->yieldBlock('body', $context, $blocks);
-        // line 270
+        // line 276
         yield "    </div>
 
     <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
     ";
-        // line 273
+        // line 279
         yield from $this->unwrap()->yieldBlock('javascripts', $context, $blocks);
-        // line 274
+        // line 280
         yield "</body>
 </html>
 
@@ -450,7 +453,7 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         yield from [];
     }
 
-    // line 193
+    // line 202
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -472,7 +475,7 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         yield from [];
     }
 
-    // line 269
+    // line 275
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -494,7 +497,7 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
         yield from [];
     }
 
-    // line 273
+    // line 279
     /**
      * @return iterable<null|scalar|\Stringable>
      */
@@ -537,7 +540,7 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
      */
     public function getDebugInfo(): array
     {
-        return array (  498 => 273,  476 => 269,  454 => 193,  431 => 6,  416 => 274,  414 => 273,  409 => 270,  407 => 269,  404 => 268,  394 => 264,  391 => 263,  386 => 262,  376 => 258,  373 => 257,  368 => 256,  358 => 252,  355 => 251,  350 => 250,  340 => 246,  337 => 245,  333 => 244,  321 => 235,  309 => 226,  303 => 223,  296 => 219,  290 => 216,  284 => 213,  278 => 210,  272 => 207,  266 => 204,  260 => 201,  251 => 194,  249 => 193,  59 => 6,  52 => 1,);
+        return array (  501 => 279,  479 => 275,  457 => 202,  434 => 6,  419 => 280,  417 => 279,  412 => 276,  410 => 275,  407 => 274,  397 => 270,  394 => 269,  389 => 268,  379 => 264,  376 => 263,  371 => 262,  361 => 258,  358 => 257,  353 => 256,  343 => 252,  340 => 251,  336 => 250,  324 => 241,  312 => 232,  306 => 229,  299 => 225,  293 => 222,  287 => 219,  281 => 216,  275 => 213,  269 => 210,  260 => 203,  258 => 202,  59 => 6,  52 => 1,);
     }
 
     public function getSourceContext(): Source
@@ -703,6 +706,15 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
             transform: translateY(-2px);
             box-shadow: 0 16px 30px rgba(196, 159, 255, 0.35);
         }
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-color: transparent;
+            color: white;
+        }
         .form-control, .form-select {
             border-radius: 8px;
             border: 1px solid #e5e7eb;
@@ -742,33 +754,30 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
             <h4><i class=\"fas fa-palette me-2\"></i>MuseHub Admin</h4>
         </div>
         <nav class=\"nav flex-column\">
-            <a class=\"nav-link active\" href=\"{{ path('admin_dashboard') }}\">
-                <i class=\"fas fa-home\"></i>Dashboard
-            </a>
-            <a class=\"nav-link\" href=\"{{ path('admin_users_list') }}\">
-                <i class=\"fas fa-users\"></i>Utilisateurs
+            <a class=\"nav-link\" href=\"{{ path('admin_dashboard') }}\">
+                <i class=\"fas fa-tachometer-alt\"></i> Dashboard
             </a>
             <a class=\"nav-link\" href=\"{{ path('admin_artworks_list') }}\">
-                <i class=\"fas fa-paint-brush\"></i>Œuvres
-            </a>
-            <a class=\"nav-link\" href=\"{{ path('admin_events_list') }}\">
-                <i class=\"fas fa-calendar-alt\"></i>Événements
-            </a>
-            <a class=\"nav-link\" href=\"{{ path('admin_event_types_list') }}\">
-                <i class=\"fas fa-tags\"></i>Types d'événements
-            </a>
-            <a class=\"nav-link\" href=\"{{ path('admin_marketplace_list') }}\">
-                <i class=\"fas fa-shopping-cart\"></i>Marketplace
+                <i class=\"fas fa-palette\"></i> Artworks
             </a>
             <a class=\"nav-link\" href=\"{{ path('admin_community_list') }}\">
-                <i class=\"fas fa-comments\"></i>Communauté
+                <i class=\"fas fa-comments\"></i> Communauté
             </a>
-            <hr style=\"border-color: rgba(255,255,255,0.2); margin: 20px 10px;\">
+            <a class=\"nav-link\" href=\"{{ path('admin_marketplace_list') }}\">
+                <i class=\"fas fa-store\"></i> Marketplace
+            </a>
+            <a class=\"nav-link\" href=\"{{ path('admin_users_list') }}\">
+                <i class=\"fas fa-users\"></i> Users
+            </a>
+            <a class=\"nav-link\" href=\"{{ path('admin_events_list') }}\">
+                <i class=\"fas fa-calendar\"></i> Events
+            </a>
+            <hr style=\"border-color: rgba(255,255,255,0.2); margin: 15px 0;\">
             <a class=\"nav-link\" href=\"{{ path('home') }}\">
-                <i class=\"fas fa-arrow-left\"></i>Retour au site
+                <i class=\"fas fa-home\"></i> Retour au site
             </a>
             <a class=\"nav-link\" href=\"{{ path('logout') }}\">
-                <i class=\"fas fa-sign-out-alt\"></i>Déconnexion
+                <i class=\"fas fa-sign-out-alt\"></i> Déconnexion
             </a>
         </nav>
     </div>
@@ -819,6 +828,6 @@ class __TwigTemplate_880be48cc90601f22a3d95501d32de35 extends Template
 </html>
 
 
-", "admin/base.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\admin\\base.html.twig");
+", "admin/base.html.twig", "C:\\xampp\\htdocs\\Musehub3\\templates\\admin\\base.html.twig");
     }
 }

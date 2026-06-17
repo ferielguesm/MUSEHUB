@@ -44,28 +44,40 @@
                         required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Type d'événement</label>
-                    <select name="event_type_id" class="form-select" id="eventTypeSelect">
-                        <option value="">-- Aucun type --</option>
+                    <label class="form-label fw-bold mb-3">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>Type d'événement
+                    </label>
+                    
+                    <div class="event-type-buttons">
                         {% for type in eventTypes %}
-                            <option value="{{ type.id }}" 
-                                    {{ event.eventType and event.eventType.id == type.id ? 'selected' : '' }}
-                                    data-description="{{ type.description }}">
-                                {{ type.name }}
-                                {% if type.requiresPayment %}💰{% endif %}
-                                {% if type.certificateEnabled %}🎓{% endif %}
-                            </option>
+                            <div class="event-type-option">
+                                <input type="radio" name="event_type_id" id="type_{{ type.id }}" value="{{ type.id }}" class="d-none" {{ event.eventType and event.eventType.id == type.id ? 'checked' : '' }}>
+                                <label for="type_{{ type.id }}" class="event-type-card">
+                                    {% set icon = 'fa-calendar' %}
+                                    {% if 'concert' in type.name|lower %}{% set icon = 'fa-music' %}
+                                    {% elseif 'expo' in type.name|lower %}{% set icon = 'fa-palette' %}
+                                    {% elseif 'conf' in type.name|lower %}{% set icon = 'fa-microphone' %}
+                                    {% elseif 'atelier' in type.name|lower %}{% set icon = 'fa-tools' %}
+                                    {% elseif 'fest' in type.name|lower %}{% set icon = 'fa-star' %}
+                                    {% endif %}
+                                    
+                                    <i class="fas {{ icon }} fa-2x mb-2"></i>
+                                    <span class="d-block fw-bold">{{ type.name }}</span>
+                                    {% if type.requiresPayment %}<span class="badge bg-success mt-1">Payant</span>{% endif %}
+                                    {% if type.certificateEnabled %}<span class="badge bg-info mt-1">Certifiant</span>{% endif %}
+                                </label>
+                            </div>
                         {% endfor %}
-                    </select>
-                    <small class="text-muted" id="typeDescription"></small>
+                    </div>
                 </div>
+
                 <div class="col-12">
                     <label class="form-label">Description</label>
                     <textarea name="description" rows="4" class="form-control">{{ event.description }}</textarea>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Lieu</label>
-                    <select name="location" class="form-select">
+                    <select name="location" class="form-select" id="locationType">
                         <option value="online" {{ event.location == 'online' ? 'selected' : '' }}>En ligne</option>
                         <option value="offline" {{ event.location == 'offline' ? 'selected' : '' }}>Présentiel</option>
                     </select>
@@ -84,22 +96,40 @@
                         <label class="form-check-label" for="isActiveEvent">Événement actif</label>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Latitude <i class="fas fa-map-marker-alt text-muted"></i></label>
-                    <input type="number" name="latitude" class="form-control" 
-                        value="{{ event.latitude }}" 
-                        step="0.000001" 
-                        placeholder="Ex: 48.8566">
-                    <small class="text-muted">Coordonnée GPS latitude (ex: 48.8566 pour Paris)</small>
+
+                <!-- OpenStreetMap Section -->
+                <div class="col-12" id="mapSection" style="display: {{ event.location == 'offline' ? 'block' : 'none' }};">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom-0 pb-0">
+                            <label class="form-label fw-bold"><i class="fas fa-map-marked-alt text-danger me-2"></i>Localisation de l'événement</label>
+                            <p class="text-muted small">Cliquez sur la carte ou recherchez une adresse pour définir le lieu.</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" id="addressSearch" class="form-control" placeholder="Rechercher une adresse (ex: Tour Eiffel, Paris)...">
+                                <button class="btn btn-outline-primary" type="button" id="searchBtn"><i class="fas fa-search"></i></button>
+                            </div>
+                            
+                            <div id="map" style="height: 400px; border-radius: 8px; z-index: 1;"></div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Lat</span>
+                                        <input type="text" name="latitude" id="latitude" class="form-control" value="{{ event.latitude }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Long</span>
+                                        <input type="text" name="longitude" id="longitude" class="form-control" value="{{ event.longitude }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Longitude <i class="fas fa-globe text-muted"></i></label>
-                    <input type="number" name="longitude" class="form-control" 
-                        value="{{ event.longitude }}" 
-                        step="0.000001" 
-                        placeholder="Ex: 2.3522">
-                    <small class="text-muted">Coordonnée GPS longitude (ex: 2.3522 pour Paris)</small>
-                </div>
+
             </div>
             <div class="d-flex justify-content-end gap-3 mt-4">
                 <a href="{{ path('admin_events_list') }}" class="btn btn-outline-secondary">Annuler</a>
@@ -111,41 +141,160 @@
     </div>
 </div>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style>
+.event-type-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.event-type-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    height: 100%;
+}
+
+.event-type-card:hover {
+    border-color: #0d6efd;
+    background: #f8f9fa;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.event-type-option input:checked + .event-type-card {
+    border-color: #0d6efd;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.event-type-card i {
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.event-type-option input:checked + .event-type-card i {
+    color: white;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const eventTypeSelect = document.getElementById('eventTypeSelect');
-    const typeDescription = document.getElementById('typeDescription');
-    const eventDateTime = document.getElementById('eventDateTime');
+    // Map Logic
+    const mapSection = document.getElementById('mapSection');
+    const locationType = document.getElementById('locationType');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
     
-    // Définir la date/heure minimum (maintenant)
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajuster pour le fuseau horaire
-    const minDateTime = now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
-    eventDateTime.setAttribute('min', minDateTime);
-    
-    // Ajouter une validation lors de la soumission
-    eventDateTime.addEventListener('change', function() {
-        const selectedDate = new Date(this.value);
-        const currentDate = new Date();
-        
-        if (selectedDate < currentDate) {
-            alert('⚠️ Veuillez choisir une date future. Les dates passées ne sont pas autorisées.');
-            this.value = '';
+    // Toggle map visibility
+    locationType.addEventListener('change', function() {
+        if (this.value === 'offline') {
+            mapSection.style.display = 'block';
+            setTimeout(() => { map.invalidateSize(); }, 100);
+        } else {
+            mapSection.style.display = 'none';
         }
     });
-    
-    function updateTypeDescription() {
-        const selectedOption = eventTypeSelect.options[eventTypeSelect.selectedIndex];
-        if (selectedOption.value && selectedOption.dataset.description) {
-            typeDescription.textContent = selectedOption.dataset.description;
-            typeDescription.style.color = selectedOption.dataset.color || '#6b7280';
-        } else {
-            typeDescription.textContent = '';
-        }
+
+    // Initialize Map
+    const initialLat = parseFloat(latitudeInput.value) || 48.8566;
+    const initialLng = parseFloat(longitudeInput.value) || 2.3522;
+    const initialZoom = latitudeInput.value ? 13 : 5;
+
+    const map = L.map('map').setView([initialLat, initialLng], initialZoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker;
+
+    // Add marker if coordinates exist
+    if (latitudeInput.value && longitudeInput.value) {
+        marker = L.marker([initialLat, initialLng], {draggable: true}).addTo(map);
+        marker.on('dragend', function(event) {
+            const position = marker.getLatLng();
+            updateInputs(position.lat, position.lng);
+        });
     }
-    
-    eventTypeSelect.addEventListener('change', updateTypeDescription);
-    updateTypeDescription();
+
+    // Click to add/move marker
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+            marker.on('dragend', function(event) {
+                const position = marker.getLatLng();
+                updateInputs(position.lat, position.lng);
+            });
+        }
+        updateInputs(lat, lng);
+    });
+
+    function updateInputs(lat, lng) {
+        latitudeInput.value = lat.toFixed(6);
+        longitudeInput.value = lng.toFixed(6);
+    }
+
+    // Nominatim Search
+    const searchBtn = document.getElementById('searchBtn');
+    const addressSearch = document.getElementById('addressSearch');
+
+    function searchAddress() {
+        const query = addressSearch.value;
+        if (!query) return;
+
+        searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    map.setView([lat, lon], 16);
+                    if (marker) {
+                        marker.setLatLng([lat, lon]);
+                    } else {
+                        marker = L.marker([lat, lon], {draggable: true}).addTo(map);
+                    }
+                    updateInputs(lat, lon);
+                } else {
+                    alert('Adresse non trouvée');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erreur lors de la recherche');
+            })
+            .finally(() => {
+                searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+            });
+    }
+
+    searchBtn.addEventListener('click', searchAddress);
+    addressSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchAddress();
+        }
+    });
 });
 </script>
 {% endblock %}

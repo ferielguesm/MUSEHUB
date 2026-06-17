@@ -14,7 +14,7 @@ class WebPostController extends AbstractController
 {
     #[Route('/posts', name: 'post_index', methods: ['GET', 'POST'])]
     #[Route('/community/posts', name: 'community_posts', methods: ['GET', 'POST'])]
-    public function index(Request $request, EntityManagerInterface $em, PostRepository $postRepo): Response
+    public function index(Request $request, EntityManagerInterface $em, PostRepository $postRepo, \App\Service\DiscordNotificationService $discordService): Response
     {
         if ($request->isMethod('POST')) {
             $authorUuid = $request->request->get('author_uuid');
@@ -29,6 +29,14 @@ class WebPostController extends AbstractController
 
                 $em->persist($post);
                 $em->flush();
+
+                // Discord Notification
+                $discordService->sendNotification(
+                    sprintf("📝 **User %s** created a new post:\n> %s", 
+                        substr($authorUuid, 0, 8), 
+                        substr($content, 0, 100) . (strlen($content) > 100 ? '...' : '')
+                    )
+                );
 
                 return $this->redirectToRoute('post_index');
             }

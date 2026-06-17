@@ -33,6 +33,9 @@ class Post
     #[ORM\Column(type:"integer")]
     private int $dislikesCount = 0;
 
+    #[ORM\Column(type:"integer")]
+    private int $commentsCount = 0;
+
     #[ORM\Column(type:"string", nullable:true)]
     private ?string $moderationStatus = 'approved'; // approved, flagged, pending
 
@@ -78,6 +81,11 @@ class Post
     public function setDislikesCount(int $count): self { $this->dislikesCount = max(0, $count); return $this; }
     public function incrementDislikes(): self { $this->dislikesCount++; return $this; }
     public function decrementDislikes(): self { $this->dislikesCount = max(0, $this->dislikesCount - 1); return $this; }
+
+    public function getCommentsCount(): int { return $this->commentsCount; }
+    public function setCommentsCount(int $count): self { $this->commentsCount = max(0, $count); return $this; }
+    public function incrementCommentsCount(): self { $this->commentsCount++; return $this; }
+    public function decrementCommentsCount(): self { $this->commentsCount = max(0, $this->commentsCount - 1); return $this; }
 
     public function getModerationStatus(): ?string { return $this->moderationStatus; }
     public function setModerationStatus(?string $moderationStatus): self { $this->moderationStatus = $moderationStatus; return $this; }

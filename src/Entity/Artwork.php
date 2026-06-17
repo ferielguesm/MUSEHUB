@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\ArtworkRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: ArtworkRepository::class)]
 class Artwork
@@ -14,21 +16,28 @@ class Artwork
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le titre est obligatoire.")]
+    #[Assert\Length(max: 255, maxMessage: "Le titre ne doit pas dépasser {{ limit }} caractères.")]
     private string $title;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\NotBlank(message: "La description est obligatoire.")]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $imageUrl = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    #[Assert\NotBlank(message: "Le prix est obligatoire.")]
+    #[Assert\Positive(message: "Le prix doit être positif.")]
     private ?string $price = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "L'UUID de l'artiste est obligatoire.")]
     private string $artistUuid;
 
     #[ORM\Column(length: 32)]
+    #[Assert\Choice(choices: ['visible', 'hidden'], message: "Statut invalide.")]
     private string $status = 'visible';
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'artworks')]
@@ -101,6 +110,16 @@ class Artwork
         }
 
         return $this;
+    }
+
+    public function isLikedBy(\App\Entity\User $user): bool
+    {
+        foreach ($this->likes as $like) {
+            if ($like->getUser() === $user) {
+                return true;
+            }
+        }
+        return false;
     }
     public function getId(): ?int
     {

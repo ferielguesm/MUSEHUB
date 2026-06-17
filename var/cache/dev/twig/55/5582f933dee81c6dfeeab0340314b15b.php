@@ -404,6 +404,6 @@ class __TwigTemplate_0283ddef80284164846d8d9f59f89953 extends Template
 </html>
 
 
-", "security/login.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\security\\login.html.twig");
+", "security/login.html.twig", "C:\\xampp\\htdocs\\Musehub3\\templates\\security\\login.html.twig");
     }
 }

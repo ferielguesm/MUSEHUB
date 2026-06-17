@@ -4,7 +4,7 @@
 
 {% block body %}
 <div class="container my-5">
-    <a href="{{ path('marketplace') }}" class="btn btn-link mb-4">
+    <a href="{{ path('marketplace') }}" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">
         <i class="fas fa-arrow-left me-2"></i>Retour à la marketplace
     </a>
 
@@ -59,17 +59,18 @@
                         </a>
                     {% else %}
                         <!-- Bouton Acheter Maintenant -->
-                        <button 
-                            type="button" 
-                            class="btn btn-success btn-lg w-100 mb-3" 
-                            id="btnBuyNow"
-                            data-listing-id="{{ listing.id }}"
-                        >
-                            <i class="fas fa-shopping-cart me-2"></i>
-                            <strong>Acheter maintenant</strong>
-                            <br>
-                            <small>{{ listing.price }} €</small>
-                        </button>
+                        <form action="{{ path('marketplace_checkout', {id: listing.id}) }}" method="POST">
+                            <button 
+                                type="submit" 
+                                class="btn btn-success btn-lg w-100 mb-3" 
+                                onclick="return confirm('Confirmer l\'achat de cette œuvre au prix de {{ listing.price }} € ?')"
+                            >
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                <strong>Acheter maintenant</strong>
+                                <br>
+                                <small>{{ listing.price }} €</small>
+                            </button>
+                        </form>
 
                         <!-- Bouton Faire une Offre -->
                         <button 
@@ -170,68 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const offerForm = document.getElementById('offerForm');
     const submitOfferBtn = document.getElementById('submitOfferBtn');
 
-    // === ACHAT IMMÉDIAT ===
-    if (btnBuyNow) {
-        btnBuyNow.addEventListener('click', function(e) {
-            e.preventDefault();
-            const listingId = this.getAttribute('data-listing-id');
-            
-            // Confirmation
-            if (!confirm('Confirmer l\'achat de cette œuvre au prix de {{ listing.price }} € ?')) {
-                return;
-            }
-
-            // Désactiver le bouton
-            btnBuyNow.disabled = true;
-            const originalText = btnBuyNow.innerHTML;
-            btnBuyNow.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Traitement en cours...';
-
-            // Appel API
-            fetch(`/api/marketplace/buy/${listingId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Erreur lors de l\'achat');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Stripe : rediriger vers le checkout
-                if (data.checkoutUrl) {
-                    showSuccessAlert(
-                        'Redirection Stripe...',
-                        'Vous allez être redirigé vers le paiement'
-                    );
-                    setTimeout(() => {
-                        window.location.href = data.checkoutUrl;
-                    }, 1000);
-                } else {
-                    // Fallback (achat direct sans Stripe)
-                    showSuccessAlert(
-                        'Achat confirmé !',
-                        'Votre commande a été créée avec succès.'
-                    );
-                    setTimeout(() => {
-                        window.location.href = '{{ path("marketplace") }}';
-                    }, 2000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showErrorAlert('Erreur', error.message);
-                btnBuyNow.disabled = false;
-                btnBuyNow.innerHTML = originalText;
-            });
-        });
-    }
+    // === ACHAT IMMÉDIAT (Logic removed - using standard form submission) ===
+    // Form handlers handled natively by browser
 
     // === FAIRE UNE OFFRE ===
     if (offerForm) {

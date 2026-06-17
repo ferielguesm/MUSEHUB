@@ -43,12 +43,8 @@ class PostAdminController extends AbstractController
         // Apply sorting
         switch ($sort) {
             case 'commented':
-                $subQuery = $this->_em->createQueryBuilder()
-                    ->select('COUNT(c2.id)')
-                    ->from('App\Entity\Comment', 'c2')
-                    ->where('c2.post = p.id');
-                $qb->addSelect(sprintf('(%s) as HIDDEN commentCount', $subQuery->getDQL()))
-                   ->orderBy('commentCount', 'DESC')
+                // Use the new commentsCount field for better performance
+                $qb->orderBy('p.commentsCount', 'DESC')
                    ->addOrderBy('p.createdAt', 'DESC');
                 break;
             case 'liked':

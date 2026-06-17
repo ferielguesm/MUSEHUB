@@ -616,6 +616,6 @@ class __TwigTemplate_c0c84acdcb1b797ec7a2be87760cbea0 extends Template
 {% endblock %}
 
 
-", "admin/dashboard.html.twig", "C:\\xampp\\htdocs\\musehub2\\templates\\admin\\dashboard.html.twig");
+", "admin/dashboard.html.twig", "C:\\xampp\\htdocs\\Musehub3\\templates\\admin\\dashboard.html.twig");
     }
 }

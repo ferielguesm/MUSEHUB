@@ -1,0 +1,112 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Offres Reçues - MuseHub{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold mb-2">Offres Reçues</h1>
+            <p class="text-muted">Gérez les offres sur vos annonces</p>
+        </div>
+        <a href="{{ path('marketplace') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Retour au Marketplace
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('info') %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% if offers is empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+            <h3>Aucune offre reçue</h3>
+            <p class="text-muted">Vous n'avez pas encore reçu d'offres sur vos annonces.</p>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for item in offers %}
+                {% set offer = item.offer %}
+                {% set listing = item.listing %}
+                <div class="col-12">
+                    <div class="card shadow-sm {% if offer.statut == 'En attente' %}border-warning{% endif %}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="card-title mb-1">
+                                                Offre pour Annonce #{{ listing.id }}
+                                            </h5>
+                                            <p class="text-muted small mb-0">
+                                                Prix de l'annonce : <strong>{{ listing.price }} €</strong>
+                                            </p>
+                                        </div>
+                                        {% if offer.statut == 'En attente' %}
+                                            <span class="badge bg-warning text-dark">En attente</span>
+                                        {% elseif offer.statut == 'Acceptée' %}
+                                            <span class="badge bg-success">Acceptée</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Refusée</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <strong>Acheteur :</strong> {{ offer.utilisateur.email }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Offre proposée :</strong> 
+                                        <span class="text-primary fw-bold fs-5">{{ offer.prixPropose }} €</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Date :</strong> {{ offer.datePropose|date('d/m/Y à H:i') }}
+                                    </div>
+                                    {% if offer.commentaire %}
+                                        <div class="alert alert-light mt-3 mb-0">
+                                            <strong>Message de l'acheteur :</strong><br>
+                                            {{ offer.commentaire }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    {% if offer.statut == 'En attente' %}
+                                        <div class="d-grid gap-2">
+                                            <form method="POST" action="{{ path('marketplace_offer_accept', {id: offer.id}) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-success w-100" onclick="return confirm('Accepter cette offre ?')">
+                                                    <i class="fas fa-check me-2"></i>Accepter
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ path('marketplace_offer_reject', {id: offer.id}) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Refuser cette offre ?')">
+                                                    <i class="fas fa-times me-2"></i>Refuser
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            <p class="small mb-0">Offre déjà traitée</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

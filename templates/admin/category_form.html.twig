@@ -1,0 +1,180 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ action == 'new' ? 'Nouvelle Catégorie' : 'Modifier Catégorie' }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <a href="{{ path('admin_category_index') }}" class="btn btn-outline-secondary btn-sm mb-3">
+            <i class="fas fa-arrow-left me-2"></i>Retour aux catégories
+        </a>
+        <h1 class="h3 mb-0">
+            <i class="fas fa-{{ action == 'new' ? 'plus' : 'edit' }} me-2"></i>
+            {{ action == 'new' ? 'Nouvelle Catégorie' : 'Modifier Catégorie' }}
+        </h1>
+    </div>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="_token" value="{{ csrf_token(action == 'new' ? 'create_category' : 'edit_category_' ~ category.id) }}">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">
+                                Nom <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="name" 
+                                   name="name" 
+                                   value="{{ category ? category.name : '' }}" 
+                                   required
+                                   placeholder="Ex: News">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="slug" class="form-label fw-bold">
+                                Slug <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="slug" 
+                                   name="slug" 
+                                   value="{{ category ? category.slug : '' }}" 
+                                   required
+                                   placeholder="Ex: news">
+                            <small class="text-muted">Utilisé dans les URLs (lettres minuscules, tirets uniquement)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">
+                                Description
+                            </label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Courte description de la catégorie">{{ category ? category.description : '' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="icon" class="form-label fw-bold">
+                                    Icône FontAwesome
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="icon" 
+                                       name="icon" 
+                                       value="{{ category ? category.icon : 'fas fa-tag' }}"
+                                       placeholder="Ex: fas fa-newspaper">
+                                <small class="text-muted">
+                                    <a href="https://fontawesome.com/icons" target="_blank">Voir les icônes</a>
+                                </small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="color" class="form-label fw-bold">
+                                    Couleur
+                                </label>
+                                <input type="color" 
+                                       class="form-control form-control-color" 
+                                       id="color" 
+                                       name="color" 
+                                       value="{{ category ? category.color : '#3498DB' }}">
+                                <small class="text-muted">Couleur d'affichage de la catégorie</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ path('admin_category_index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action == 'new' ? 'Créer' : 'Enregistrer' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-eye me-2"></i>Aperçu
+                    </h5>
+                    <div class="p-3 bg-light rounded" id="preview">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-tag me-2" id="preview-icon" style="color: #3498DB"></i>
+                            <strong id="preview-name">Nom de la catégorie</strong>
+                        </div>
+                        <p class="text-muted small mb-0 mt-2" id="preview-description">Description de la catégorie</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('name');
+    const iconInput = document.getElementById('icon');
+    const colorInput = document.getElementById('color');
+    const descriptionInput = document.getElementById('description');
+    
+    const previewName = document.getElementById('preview-name');
+    const previewIcon = document.getElementById('preview-icon');
+    const previewDescription = document.getElementById('preview-description');
+    
+    function updatePreview() {
+        previewName.textContent = nameInput.value || 'Nom de la catégorie';
+        previewIcon.className = iconInput.value || 'fas fa-tag';
+        previewIcon.style.color = colorInput.value;
+        previewDescription.textContent = descriptionInput.value || 'Description de la catégorie';
+    }
+    
+    nameInput.addEventListener('input', updatePreview);
+    iconInput.addEventListener('input', updatePreview);
+    colorInput.addEventListener('input', updatePreview);
+    descriptionInput.addEventListener('input', updatePreview);
+    
+    // Auto-generate slug from name
+    nameInput.addEventListener('input', function() {
+        const slugInput = document.getElementById('slug');
+        if (!slugInput.value || slugInput.dataset.autoGenerated) {
+            const slug = this.value
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            slugInput.value = slug;
+            slugInput.dataset.autoGenerated = 'true';
+        }
+    });
+    
+    document.getElementById('slug').addEventListener('input', function() {
+        this.dataset.autoGenerated = '';
+    });
+    
+    // Initial preview
+    updatePreview();
+});
+</script>
+{% endblock %}

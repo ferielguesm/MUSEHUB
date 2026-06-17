@@ -14,9 +14,14 @@
             </h1>
             <p class="text-muted">{% if category %}Modifier les informations de la catégorie{% else %}Créer une nouvelle catégorie d'œuvres{% endif %}</p>
         </div>
-        <a href="{{ path('admin_category_index') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Retour à la liste
-        </a>
+        <div class="btn-group" role="group">
+            <a href="{{ path('admin_artworks_list') }}" class="btn btn-outline-primary">
+                <i class="fas fa-palette me-2"></i>Retour aux œuvres
+            </a>
+            <a href="{{ path('admin_category_index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
     </div>
 </div>
 

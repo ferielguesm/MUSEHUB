@@ -275,6 +275,7 @@ Bonne découverte artistique ! 🎨✨",
         'profile' => ['profil', 'profile', 'compte', 'paramètre', 'réglage'],
         'report' => ['signaler', 'report', 'problème', 'abus', 'plainte', 'bug'],
         'delete' => ['supprimer', 'delete', 'effacer', 'retirer', 'enlever'],
+        'welcome' => ['bonjour', 'hello', 'salut', 'coucou', 'hey', 'hi', 'ça va', 'ca va'],
     ];
 
     private const ESCALATION_TRIGGERS = [
@@ -289,7 +290,8 @@ Bonne découverte artistique ! 🎨✨",
         private PostRepository $postRepository,
         private PostCategoryRepository $categoryRepository,
         private UserRepository $userRepository,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private ?\App\Service\OpenAIService $openAIService = null
     ) {}
 
     /**
@@ -306,7 +308,7 @@ Bonne découverte artistique ! 🎨✨",
             'message' => $message,
         ]);
 
-        // Check for direct commands
+        // Check for direct commands first (these bypass AI)
         if (isset(self::COMMANDS[$message])) {
             $topic = self::COMMANDS[$message];
             return [
@@ -318,6 +320,29 @@ Bonne découverte artistique ! 🎨✨",
             ];
         }
 
+        // Try OpenAI if available and configured
+        if ($this->openAIService && $this->openAIService->isConfigured()) {
+            $aiResult = $this->openAIService->getChatResponse($originalMessage, $userId);
+            
+            if ($aiResult['success']) {
+                // Check if message needs escalation even with AI response
+                $escalationReason = $this->checkEscalationTriggers($originalMessage);
+                if ($escalationReason) {
+                    $aiResult['response'] .= "\n\n🚨 **Un modérateur a été notifié** pour vous aider avec ce problème important.";
+                    $aiResult['escalated'] = true;
+                    $aiResult['escalation_reason'] = $escalationReason;
+                }
+                
+                return $aiResult;
+            }
+            
+            // If AI fails, log it and continue to fallback
+            $this->logger->warning('OpenAI failed, using fallback', [
+                'error' => $aiResult['error'] ?? 'unknown',
+            ]);
+        }
+
+        // Fallback to original FAQ-based logic
         // Check for direct FAQ matches
         foreach (self::FAQ_RESPONSES as $key => $response) {
             if (str_contains($message, $key)) {

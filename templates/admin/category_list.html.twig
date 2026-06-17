@@ -1,0 +1,106 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Gestion des Catégories{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-tags me-2"></i>Catégories de Posts
+        </h1>
+        <a href="{{ path('admin_category_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nouvelle Catégorie
+        </a>
+    </div>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if categories is empty %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-tags fa-3x mb-3"></i>
+                    <p>Aucune catégorie pour le moment</p>
+                    <a href="{{ path('admin_category_new') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Créer la première catégorie
+                    </a>
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Slug</th>
+                                <th>Description</th>
+                                <th>Icône</th>
+                                <th>Couleur</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.id }}</td>
+                                    <td>
+                                        <strong>{{ category.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <code>{{ category.slug }}</code>
+                                    </td>
+                                    <td>{{ category.description|default('—') }}</td>
+                                    <td>
+                                        <i class="{{ category.icon }}" style="color: {{ category.color }}"></i>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ category.color }}">
+                                            {{ category.color }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ path('admin_category_edit', {id: category.id}) }}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    onclick="confirmDelete({{ category.id }}, '{{ category.name|e('js') }}')"
+                                                    title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <form id="delete-form-{{ category.id }}" 
+                                              action="{{ path('admin_category_delete', {id: category.id}) }}" 
+                                              method="POST" 
+                                              class="d-none">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_category_' ~ category.id) }}">
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(id, name) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${name}" ?\n\nCette action est irréversible.`)) {
+        document.getElementById('delete-form-' + id).submit();
+    }
+}
+</script>
+{% endblock %}

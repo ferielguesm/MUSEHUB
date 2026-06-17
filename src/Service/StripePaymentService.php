@@ -2,159 +2,93 @@
 
 namespace App\Service;
 
-use App\Entity\Listing;
 use App\Entity\Transaction;
+use App\Repository\TransactionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Stripe\Checkout\Session;
 use Stripe\Stripe;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Stripe\Checkout\Session;
+use Psr\Log\LoggerInterface;
 
 class StripePaymentService
 {
-    private string $stripeSecretKey;
-    private string $appUrl;
-
     public function __construct(
-        ParameterBagInterface $params,
-        private EntityManagerInterface $em
+        private string $stripeSecretKey,
+        private EntityManagerInterface $em,
+        private TransactionRepository $transactionRepository,
+        private LoggerInterface $logger
     ) {
-        $this->stripeSecretKey = $params->get('stripe_secret_key');
-        // Validate the secret key format early to fail fast when misconfigured
-        if (!is_string($this->stripeSecretKey) || !str_starts_with($this->stripeSecretKey, 'sk_')) {
-            throw new \RuntimeException('Stripe secret key invalide. Veuillez définir STRIPE_SECRET_KEY dans votre .env.local et vérifier qu\'elle commence par "sk_".');
-        }
-
-        $this->appUrl = $params->get('app_url');
         Stripe::setApiKey($this->stripeSecretKey);
     }
 
-    /**
-     * Crée une session Stripe Checkout pour un achat direct
-     *
-     * @param Listing $listing
-     * @param string $buyerEmail
-     * @param string $buyerUuid
-     * @return array{checkoutUrl: string, sessionId: string}
-     */
-    public function createCheckoutSession(
-        Listing $listing,
-        string $buyerEmail,
-        string $buyerUuid
-    ): array {
-        // Créer la Transaction en base (status: pending_payment)
-        $transaction = new Transaction();
-        $transaction->setBuyerUuid($buyerUuid);
-        $transaction->setListingUuid($listing->getUuid());
-        $transaction->setAmount($listing->getPrice());
-        $transaction->setStatus('pending_payment');
-
-        $this->em->persist($transaction);
-        $this->em->flush();
-
-        // Créer la session Stripe
+    public function createArtworkCheckoutSession(
+        int $listingId,
+        string $listingUuid,
+        string $artworkTitle,
+        float $price,
+        string $buyerUuid,
+        string $sellerUuid,
+        string $successUrl,
+        string $cancelUrl
+    ): Session {
         $session = Session::create([
             'payment_method_types' => ['card'],
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'eur',
-                    'product_data' => [
-                        'name' => 'Annonce #' . $listing->getId(),
-                        'description' => 'Artwork UUID: ' . $listing->getArtworkUuid(),
-                        'metadata' => [
-                            'listing_id' => $listing->getId(),
-                            'listing_uuid' => $listing->getUuid(),
-                        ],
-                    ],
-                    'unit_amount' => (int)($listing->getPrice() * 100), // En centimes
+                    'product_data' => ['name' => $artworkTitle],
+                    'unit_amount' => (int)($price * 100),
                 ],
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'customer_email' => $buyerEmail,
-            'client_reference_id' => $transaction->getUuid(),
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
             'metadata' => [
-                'transaction_id' => $transaction->getId(),
-                'transaction_uuid' => $transaction->getUuid(),
-                'listing_id' => $listing->getId(),
-                'listing_uuid' => $listing->getUuid(),
+                'listing_id' => $listingId,
+                'listing_uuid' => $listingUuid,
                 'buyer_uuid' => $buyerUuid,
+                'seller_uuid' => $sellerUuid,
             ],
-            'success_url' => $this->appUrl . '/marketplace/success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => $this->appUrl . '/marketplace/cancel?session_id={CHECKOUT_SESSION_ID}',
         ]);
 
-        return [
-            'checkoutUrl' => $session->url,
-            'sessionId' => $session->id,
-        ];
+        // Create Pending Transaction
+        $transaction = new Transaction();
+        $transaction->setBuyerUuid($buyerUuid);
+        $transaction->setListingUuid($listingUuid);
+        $transaction->setAmount((string)$price);
+        $transaction->setStripeSessionId($session->id);
+        $transaction->setStatus('pending_payment');
+        
+        $this->em->persist($transaction);
+        $this->em->flush();
+
+        return $session;
     }
 
-    /**
-     * Complète une transaction après paiement réussi
-     *
-     * @param string $sessionId
-     * @return Transaction|null
-     */
     public function completeTransaction(string $sessionId): ?Transaction
     {
-        $session = Session::retrieve($sessionId);
-
-        if ($session->payment_status !== 'paid') {
-            return null;
+        $transaction = $this->transactionRepository->findOneBy(['stripeSessionId' => $sessionId]);
+        
+        if ($transaction) {
+            $transaction->setStatus('paid');
+            $this->em->flush();
+            $this->logger->info("Transaction {$transaction->getId()} completed for session $sessionId");
+        } else {
+            $this->logger->error("Transaction not found for session $sessionId");
         }
-
-        // Récupérer la transaction via le metadata
-        $transactionUuid = $session->metadata->transaction_uuid ?? null;
-        if (!$transactionUuid) {
-            return null;
-        }
-
-        $transactionRepository = $this->em->getRepository(Transaction::class);
-        $transaction = $transactionRepository->findOneBy(['uuid' => $transactionUuid]);
-
-        if (!$transaction) {
-            return null;
-        }
-
-        // Mettre à jour le statut à 'paid'
-        $transaction->setStatus('paid');
-        $this->em->flush();
 
         return $transaction;
     }
 
-    /**
-     * Annule une transaction si le paiement est annulé
-     *
-     * @param string $sessionId
-     * @return void
-     */
-    public function cancelTransaction(string $sessionId): void
+    public function cancelTransaction(string $sessionId): ?Transaction
     {
-        $session = Session::retrieve($sessionId);
-
-        $transactionUuid = $session->metadata->transaction_uuid ?? null;
-        if (!$transactionUuid) {
-            return;
-        }
-
-        $transactionRepository = $this->em->getRepository(Transaction::class);
-        $transaction = $transactionRepository->findOneBy(['uuid' => $transactionUuid]);
-
-        if ($transaction && $transaction->getStatus() === 'pending_payment') {
+        $transaction = $this->transactionRepository->findOneBy(['stripeSessionId' => $sessionId]);
+        
+        if ($transaction) {
             $transaction->setStatus('canceled');
             $this->em->flush();
         }
-    }
 
-    /**
-     * Récupère une session Stripe
-     *
-     * @param string $sessionId
-     * @return Session
-     */
-    public function getSession(string $sessionId): Session
-    {
-        return Session::retrieve($sessionId);
+        return $transaction;
     }
 }

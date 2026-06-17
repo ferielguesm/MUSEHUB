@@ -51,5 +51,20 @@ class PostReactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Count reactions by post ID and type
+     */
+    public function countByPostAndType(int $postId, string $type): int
+    {
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.id)')
+            ->andWhere('r.post = :postId')
+            ->andWhere('r.type = :type')
+            ->setParameter('postId', $postId)
+            ->setParameter('type', $type)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
 

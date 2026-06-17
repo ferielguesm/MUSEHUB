@@ -27,7 +27,9 @@ class FrontOfficeController extends AbstractController
         private PostRepository $postRepository,
         private PostReactionRepository $postReactionRepository,
         private ParticipantRepository $participantRepository,
-        private UserRepository $userRepository
+        private UserRepository $userRepository,
+        private \App\Service\MatrixService $matrixService,
+        private \App\Service\IssoService $issoService
     ) {
     }
 
@@ -157,6 +159,29 @@ class FrontOfficeController extends AbstractController
         ]);
     }
 
+    #[Route('/events/{id}', name: 'event_show', requirements: ['id' => '\d+'])]
+    public function eventShow(int $id): Response
+    {
+        $event = $this->eventRepository->find($id);
+        if (!$event) {
+            throw $this->createNotFoundException('Événement introuvable');
+        }
+
+        $user = $this->getUser();
+        $isRegistered = false;
+        if ($user) {
+            $isRegistered = $this->participantRepository->findOneBy([
+                'eventUuid' => $event->getUuid(),
+                'participantUuid' => $user->getUuid()
+            ]) !== null;
+        }
+
+        return $this->render('front/event_show.html.twig', [
+            'event' => $event,
+            'isRegistered' => $isRegistered,
+        ]);
+    }
+
     #[Route('/marketplace', name: 'marketplace')]
     public function marketplace(): Response
     {
@@ -164,8 +189,21 @@ class FrontOfficeController extends AbstractController
 
         // Get offers for each listing
         $offresParListing = [];
+        $artworksParListing = [];
+        
         foreach ($listings as $listing) {
             $offresParListing[$listing->getId()] = $this->offreRepository->findByListing($listing->getId());
+            
+            // Parse artwork UUID to get artwork
+            $artworkUuid = $listing->getArtworkUuid();
+            $separatorPos = strrpos($artworkUuid, '-');
+            if ($separatorPos !== false) {
+                $artworkId = (int)substr($artworkUuid, $separatorPos + 1);
+                $artwork = $this->artworkRepository->find($artworkId);
+                if ($artwork) {
+                    $artworksParListing[$listing->getId()] = $artwork;
+                }
+            }
         }
 
         // Get artworks that the user owns (if logged in as artist) for creating listings
@@ -181,6 +219,7 @@ class FrontOfficeController extends AbstractController
         return $this->render('front/marketplace.html.twig', [
             'listings' => $listings,
             'offresParListing' => $offresParListing,
+            'artworksParListing' => $artworksParListing,
             'userArtworks' => $userArtworks,
         ]);
     }
@@ -199,25 +238,30 @@ class FrontOfficeController extends AbstractController
     }
 
     #[Route('/community', name: 'community')]
-    public function community(Request $request, \App\Repository\PostCategoryRepository $categoryRepository): Response
+    public function community(Request $request): Response
     {
-        $category = $request->query->get('category');
         $sort = $request->query->get('sort', 'recent');
 
-        $posts = $this->postRepository->findWithFilters($category, $sort, 20);
+        $posts = $this->postRepository->findWithFilters(null, $sort, 20);
         $authorNames = $this->buildAuthorNamesMap($posts);
         $commentAuthorNames = $this->buildCommenterNamesMap($posts);
         $userReactions = $this->buildUserReactionMap($posts);
-        $categories = $categoryRepository->findAll();
+
+        // Get Matrix public rooms if configured
+        $matrixRooms = $this->matrixService->getPublicRooms(5);
+
+        // Check if Isso is configured
+        $issoConfigured = $this->issoService->isConfigured();
 
         return $this->render('front/community.html.twig', [
             'posts' => $posts,
-            'categories' => $categories,
             'authorNames' => $authorNames,
             'commentAuthorNames' => $commentAuthorNames,
             'userReactions' => $userReactions,
-            'currentCategory' => $category,
             'currentSort' => $sort,
+            'matrixRooms' => $matrixRooms,
+            'issoConfigured' => $issoConfigured,
+            'issoService' => $this->issoService,
         ]);
     }
 

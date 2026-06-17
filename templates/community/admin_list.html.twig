@@ -1,12 +1,12 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Modération Communauté - MuseHub Admin{% endblock %}
+{% block title %}Gestion Communauté - MuseHub Admin{% endblock %}
 
 {% block body %}
 <div class="mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
     <div>
-        <h1 class="h3 mb-0">Modération Communauté</h1>
-        <p class="text-muted mb-0">Gérer les posts et commentaires</p>
+        <h1 class="h3 mb-0">Gestion Communauté</h1>
+        <p class="text-muted mb-0">Gérer les posts et les interactions</p>
     </div>
     <a href="{{ path('admin_community_post_new') }}" class="btn btn-primary">
         <i class="fas fa-plus me-2"></i>Nouveau post
@@ -16,97 +16,123 @@
 <!-- Statistiques -->
 <div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="card" style="border-radius: 15px; border-left: 4px solid #3b82f6;">
+        <div class="card" style="border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #7f00ff;">
             <div class="card-body">
-                <h3 class="text-primary">{{ stats.total_posts }}</h3>
-                <p class="text-muted mb-0">Total posts</p>
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(127, 0, 255, 0.1);">
+                        <i class="fas fa-comments fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0 text-primary">{{ stats.total_posts }}</h3>
+                        <p class="text-muted mb-0">Total Posts</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card" style="border-radius: 15px; border-left: 4px solid #10b981;">
+        <div class="card" style="border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #22c55e;">
             <div class="card-body">
-                <h3 class="text-success">{{ stats.total_comments }}</h3>
-                <p class="text-muted mb-0">Total commentaires</p>
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(34, 197, 94, 0.1);">
+                        <i class="fas fa-comment-dots fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0 text-success">{{ stats.total_comments }}</h3>
+                        <p class="text-muted mb-0">Total Commentaires</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Filtres et tri -->
+<!-- Filtres -->
 <div class="card mb-4" style="border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <div class="card-body">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Rechercher</label>
-                <input type="text" class="form-control" id="adminSearchInput" placeholder="Rechercher dans le contenu..." value="{{ currentSearch }}">
+         <form method="GET" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <label class="form-label text-muted small mb-1">Rechercher</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" value="{{ currentSearch }}" class="form-control border-start-0 ps-0" placeholder="Contenu du post...">
+                </div>
             </div>
             <div class="col-md-3">
-                <label class="form-label fw-semibold">Filtrer par catégorie</label>
-                <select class="form-select" id="adminCategoryFilter">
-                    <option value="">Toutes les catégories</option>
-                    <option value="1" {{ currentCategory == '1' ? 'selected' : '' }}>News</option>
-                    <option value="2" {{ currentCategory == '2' ? 'selected' : '' }}>Questions</option>
-                    <option value="3" {{ currentCategory == '3' ? 'selected' : '' }}>Memes</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Trier par</label>
-                <select class="form-select" id="adminSortFilter">
+                <label class="form-label text-muted small mb-1">Trier par</label>
+                <select name="sort" class="form-select">
                     <option value="recent" {{ currentSort == 'recent' ? 'selected' : '' }}>Plus récent</option>
                     <option value="oldest" {{ currentSort == 'oldest' ? 'selected' : '' }}>Plus ancien</option>
                     <option value="liked" {{ currentSort == 'liked' ? 'selected' : '' }}>Plus aimé</option>
                     <option value="commented" {{ currentSort == 'commented' ? 'selected' : '' }}>Plus commenté</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <button type="button" class="btn btn-primary w-100" id="adminApplyFilters">
-                    <i class="fas fa-filter me-2"></i>Appliquer
+            <div class="col-md-4 d-flex gap-2 mt-4 mt-md-0 align-items-end">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-2"></i>Filtrer
                 </button>
+                <a href="{{ path('admin_community_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo me-2"></i>Reset
+                </a>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 
 <!-- Liste des posts -->
-<div class="card" style="border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Posts ({{ posts|length }})</h5>
-    </div>
-    <div class="card-body">
+<div class="card" style="border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
                     <tr>
-                        <th>ID</th>
+                        <th class="ps-4">ID</th>
                         <th>Auteur</th>
                         <th>Contenu</th>
-                        <th>Likes</th>
+                        <th>Engagement</th>
                         <th>Date</th>
-                        <th class="text-end">Actions</th>
+                        <th class="text-end pe-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for post in posts %}
                     <tr>
-                        <td>{{ post.id }}</td>
-                        <td><code>{{ post.authorUuid|slice(0, 8) }}...</code></td>
-                        <td>{{ post.content|slice(0, 50) }}{% if post.content|length > 50 %}...{% endif %}</td>
+                        <td class="ps-4 fw-semibold text-muted">#{{ post.id }}</td>
                         <td>
-                            <span class="badge bg-danger">
-                                <i class="fas fa-heart me-1"></i>{{ post.likesCount }}
-                            </span>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ post.authorUuid|slice(0,1)|upper }}
+                                </div>
+                                <span class="text-dark small">{{ post.authorUuid|slice(0, 8) }}...</span>
+                            </div>
                         </td>
-                        <td>{{ post.createdAt|date('d/m/Y H:i') }}</td>
                         <td>
+                            <div class="text-truncate" style="max-width: 300px;">
+                                {{ post.content }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-10">
+                                    <i class="fas fa-heart me-1"></i>{{ post.likesCount }}
+                                </span>
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-10">
+                                    <i class="fas fa-comment me-1"></i>{{ post.comments|length }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="text-muted small">
+                            <i class="far fa-calendar-alt me-1"></i>{{ post.createdAt|date('d/m/Y H:i') }}
+                        </td>
+                        <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ path('admin_community_post_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                    Modifier
+                                <a href="{{ path('admin_community_post_edit', {id: post.id}) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                    <i class="fas fa-pen"></i>
                                 </a>
-                                <form action="{{ path('admin_community_post_delete', {id: post.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce post ?');">
+                                <form action="{{ path('admin_community_post_delete', {id: post.id}) }}" method="POST" onsubmit="return confirm('Supprimer ce post ?');" class="d-inline">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ post.id) }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        Supprimer
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
                             </div>
@@ -114,9 +140,11 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-comments fa-2x text-muted mb-2"></i>
-                            <p class="text-muted">Aucun post</p>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                                <p class="mb-0">Aucun post trouvé</p>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -125,40 +153,4 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('adminSearchInput');
-    const categoryFilter = document.getElementById('adminCategoryFilter');
-    const sortFilter = document.getElementById('adminSortFilter');
-    const applyBtn = document.getElementById('adminApplyFilters');
-
-    applyBtn.addEventListener('click', function() {
-        const search = searchInput.value.trim();
-        const category = categoryFilter.value;
-        const sort = sortFilter.value;
-
-        const params = new URLSearchParams();
-        if (search) {
-            params.set('search', search);
-        }
-        if (category) {
-            params.set('category', category);
-        }
-        if (sort && sort !== 'recent') {
-            params.set('sort', sort);
-        }
-
-        const url = '{{ path('admin_community_list') }}' + (params.toString() ? '?' + params.toString() : '');
-        window.location.href = url;
-    });
-
-    // Optional: Auto-apply on Enter key in search
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            applyBtn.click();
-        }
-    });
-});
-</script>
 {% endblock %}
